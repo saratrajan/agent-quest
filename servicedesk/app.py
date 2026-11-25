@@ -10,7 +10,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from servicedesk.api import Tickets, make_router as make_api_router
+from servicedesk.api import Tickets
+from servicedesk.api import make_router as make_api_router
 from servicedesk.pages import make_router as make_pages_router
 
 HERE = Path(__file__).parent

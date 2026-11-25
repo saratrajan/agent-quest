@@ -1,9 +1,9 @@
 """A session stays locked until the one before it is complete."""
 import pytest
 import yaml
+from conftest import STEPS
 from fastapi.testclient import TestClient
 
-from conftest import STEPS
 from course.app import create_app
 
 S1_MANUAL = ["v1", "r1", "c1", "exp1", "p1", "q1"]

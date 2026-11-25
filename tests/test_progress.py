@@ -66,14 +66,14 @@ def test_summarise_all_done_has_no_continue(tmp_lessons, tmp_path):
 
 # --- learning streak
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime
 
 from course.progress import streak
 
 
 def state_with(*days):
     # stamped at local noon, converted to UTC the way the app stores it
-    stamp = lambda d: datetime.fromisoformat(f"{d}T12:00:00").astimezone().astimezone(timezone.utc).isoformat()
+    stamp = lambda d: datetime.fromisoformat(f"{d}T12:00:00").astimezone().astimezone(UTC).isoformat()
     return {"steps": {f"1/s{k}": {"done": True, "source": "manual", "at": stamp(d)} for k, d in enumerate(days)},
             "answers": {}, "checks": {}}
 
@@ -100,9 +100,9 @@ def test_streak_ignores_unmarked_steps_and_empty_progress():
 def test_streak_counts_a_step_done_late_in_the_evening_as_today():
     """Stored times are UTC. Late evening in the Americas is already tomorrow in UTC, and must still count as today."""
     local_late = datetime.combine(date(2026, 11, 24), datetime.min.time()).replace(hour=23, minute=30).astimezone()
-    state = {"steps": {"1/a": {"done": True, "source": "manual", "at": local_late.astimezone(timezone.utc).isoformat()}},
+    state = {"steps": {"1/a": {"done": True, "source": "manual", "at": local_late.astimezone(UTC).isoformat()}},
              "answers": {}, "checks": {}}
     assert streak(state, date(2026, 11, 24)) == 1
     local_early = local_late.replace(hour=0, minute=10)
-    state["steps"]["1/a"]["at"] = local_early.astimezone(timezone.utc).isoformat()
+    state["steps"]["1/a"]["at"] = local_early.astimezone(UTC).isoformat()
     assert streak(state, date(2026, 11, 24)) == 1

@@ -10,7 +10,6 @@ Fill the four gaps marked YOUR CODE (about 20 lines in total).
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from parts import Config, FeedForward, Head, get_batch
 
 

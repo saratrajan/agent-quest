@@ -2,12 +2,12 @@
 write goes to a temporary file first, and an unreadable file is set aside."""
 import json
 import os
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _empty() -> dict:
@@ -26,7 +26,7 @@ class ProgressStore:
             if not isinstance(state, dict) or not all(isinstance(state.get(k, {}), dict) for k in _empty()):
                 raise ValueError("unexpected shape")
         except (ValueError, OSError):
-            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+            stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%f")
             self.path.rename(self.path.with_name(f"{self.path.name}.corrupt-{stamp}"))
             return _empty()
         return {**_empty(), **state}

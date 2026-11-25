@@ -1,11 +1,10 @@
 """Buddy, the course assistant: facts come from code, language from a local model, nothing from outside the course."""
-from datetime import datetime, timezone
 
 import pytest
 import yaml
+from conftest import STEPS
 from fastapi.testclient import TestClient
 
-from conftest import STEPS
 from course.app import create_app
 
 A = "/api/course/assistant"

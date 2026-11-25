@@ -1,0 +1,5 @@
+# Markdown lint rules. Run locally with: make lint
+default: true
+MD013: false   # line length: prose is wrapped by the editor, tables cannot be
+MD033: false   # inline HTML: the read-me header uses <picture> for light and dark logos
+MD041: false   # first line a heading: the read-me opens with the logo

@@ -1,5 +1,6 @@
 """JSON interface for the course: outline, session steps, progress."""
 import json
+from datetime import date
 from pathlib import Path
 from typing import Literal
 
@@ -8,8 +9,6 @@ from pydantic import BaseModel, Field
 
 from course import checks
 from course.manifest import Session, load_course
-from datetime import date
-
 from course.progress import ProgressStore, streak, summarise
 
 ANSWERABLE = {"experiment", "problem", "review"}

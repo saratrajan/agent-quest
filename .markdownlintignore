@@ -1,0 +1,7 @@
+# Folders the Markdown linter skips: local-only material and installed packages.
+.venv/
+docs/
+data/
+node_modules/
+.superpowers/
+.pytest_cache/

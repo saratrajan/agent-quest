@@ -54,7 +54,7 @@ def test_training_learns_a_simple_pattern():
     opt = torch.optim.AdamW(model.parameters(), lr=0.1)
     g = torch.Generator().manual_seed(0)
     first = last = None
-    for step in range(300):
+    for _ in range(300):
         loss = train_step(model, opt, *get_batch(data, 8, 16, g))
         first = loss if first is None else first
         last = loss

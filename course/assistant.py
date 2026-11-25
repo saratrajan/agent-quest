@@ -17,7 +17,6 @@ import re
 import urllib.error
 import urllib.request
 from datetime import date, datetime
-from pathlib import Path
 
 MILESTONES = [("M1", "fundamentals done", 5), ("M2", "RAG measured", 8), ("M3", "agent usable", 10), ("M4", "production-ready", 14)]
 STOP = set("a an and are as at be but by can could do does for from has have how i if in into is it its me my of on or our "

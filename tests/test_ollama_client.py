@@ -1,8 +1,8 @@
 """The lesson's Ollama client, tested against a stand-in server so no model is needed."""
 import json
+import socketserver
 import sys
 import threading
-import socketserver
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 

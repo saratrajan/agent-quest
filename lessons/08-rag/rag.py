@@ -23,8 +23,8 @@ sys.path.insert(0, str(HERE))
 import agentkit  # noqa: E402
 
 try:
-    import store  # noqa: E402
     import chromadb  # noqa: E402,F401
+    import store  # noqa: E402
 except ModuleNotFoundError as err:
     if err.name != "chromadb":
         raise
@@ -62,7 +62,7 @@ def adopt() -> None:
     print(f"  your exact search (session 7): {1000 * my_time / 100:.2f} ms per search")
     print(f"  Chroma (approximate index):    {1000 * their_time / 100:.2f} ms per search")
     print(f"  same first result: {same_top} of 100.  Same five results: {same_set} of 100.  Results in common: {shared} of 500.")
-    print(f"  Chroma keeps its index in data/chroma/, so the next run starts without re-embedding.")
+    print("  Chroma keeps its index in data/chroma/, so the next run starts without re-embedding.")
 
 
 RERANK_SCHEMA = {"type": "object", "properties": {"order": {"type": "array", "items": {"type": "string"}}}, "required": ["order"]}

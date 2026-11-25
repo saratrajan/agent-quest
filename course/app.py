@@ -9,7 +9,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from course.api import Course, make_router as make_api_router
+from course.api import Course
+from course.api import make_router as make_api_router
 from course.assistant import Assistant
 from course.pages import make_router as make_pages_router
 

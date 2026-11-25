@@ -18,7 +18,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 DESK = os.environ.get("DESK_URL", "http://localhost:8080")
@@ -146,7 +146,7 @@ def save_result(name: str, record: dict, data_dir: str = "data") -> None:
         runs = json.loads(path.read_text())["runs"]
     except (OSError, ValueError, KeyError, TypeError):
         runs = []
-    row = {**record, "name": name, "saved_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+    row = {**record, "name": name, "saved_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")}
     if any(r.get("name") == name for r in runs):
         runs = [row if r.get("name") == name else r for r in runs]
     else:

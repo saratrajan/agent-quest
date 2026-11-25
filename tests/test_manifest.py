@@ -1,8 +1,8 @@
 import copy
 
 import pytest
-
 from conftest import STEPS, write_lessons
+
 from course.manifest import ManifestError, load_course
 
 
