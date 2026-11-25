@@ -3,7 +3,6 @@ import os
 
 import pytest
 import torch
-
 from parts import Config, get_batch
 
 if os.environ.get("LAB_SOLUTIONS") == "1":

@@ -61,7 +61,7 @@ fall back to the lesson's own text.
 ![Roadmap: sessions 1 to 10 are available now, sessions 11 to 14 are planned, with four milestones](assets/roadmap.svg)
 
 | Phase | Sessions | Status |
-|---|---|---|
+| --- | --- | --- |
 | **1 · Fundamentals** | 1 Tokenization · 2 Predicting the next token · 3 Attention · 4 A tiny GPT · 5 From toy to real | Available now |
 | **2 · The agent** | 6 Baseline and measurement · 7 Embeddings for search · 8 RAG · 9 Tool calling · 10 The agent | Available now |
 | **2 · The agent** | 11 Guardrails and failure · 12 Framework port · 13 Fine-tuning versus RAG · 14 Capstone | Planned |
@@ -73,7 +73,7 @@ measured (session 8), **M3** agent usable (session 10), **M4** production-ready
 ## Two separate applications
 
 | | Address | What it is |
-|---|---|---|
+| --- | --- | --- |
 | **Service desk** | `http://localhost:8080` | Time Travel Inc.'s incident management tool: queues of open and resolved incidents, incident records with work notes, a form to raise a new incident, services and runbooks. It also serves a ServiceNow-style JSON interface under `/api`. |
 | **Course app** | `http://localhost:8000` | 14 sessions, each with pre-work to watch, a lesson with interactive diagrams, short coding exercises, experiments and homework. It tracks your progress. |
 
@@ -103,7 +103,7 @@ The script assumes nothing is installed. It works through the list below, sets
 up what it can, and asks before each sizeable download:
 
 | Step | What it does | Needed for |
-|---|---|---|
+| --- | --- | --- |
 | Python environment | Creates `.venv` and installs the core dependencies | Everything |
 | Lesson libraries | Asks, then installs PyTorch and Chroma (about 300 MB) | Exercises in sessions 2 to 5; the vector database from session 8 |
 | Incident data | Generates the 500 incidents locally | The service desk |
@@ -169,10 +169,27 @@ a row to the results board in the course app, so you can compare the model
 alone, a vote among similar incidents, retrieval, and the agent with tools on
 the same incidents.
 
+## Checks
+
+Every pull request and every push to `main` runs four checks on GitHub-hosted
+runners: Python lint (ruff), Markdown lint, the unit tests, and a secret scan
+(gitleaks). The jobs are reusable workflows kept in
+[saratrajan/ci-cd-templates](https://github.com/saratrajan/ci-cd-templates).
+To run the same checks before pushing:
+
+```bash
+ruff check .
+npx markdownlint-cli2
+make test
+```
+
+The experiments that call a local model are not part of these checks; they
+need Ollama and are run by hand.
+
 ## Where things are kept
 
 | Path | What |
-|---|---|
+| --- | --- |
 | `data/progress.json` | Your progress and written answers. Delete it to start again. |
 | `data/timetravel.db` | The incidents. `make data` rebuilds it and never touches your progress. |
 | `data/corpus.txt` | Text of the 400 history incidents, used for training in the fundamentals sessions. |

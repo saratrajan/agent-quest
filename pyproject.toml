@@ -7,7 +7,7 @@ license = "MIT"
 dependencies = ["fastapi>=0.115", "uvicorn>=0.30", "jinja2>=3.1", "pyyaml>=6.0", "tiktoken>=0.8"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "httpx>=0.27"]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.8"]
 lessons = ["torch>=2.4", "numpy>=2", "chromadb>=1.0"]
 
 [tool.setuptools]
@@ -16,3 +16,23 @@ py-modules = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.ruff]
+line-length = 160
+target-version = "py312"
+
+[tool.ruff.lint]
+# Errors, unused names, import order, outdated syntax and likely bugs.
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",  # long lines: lesson text and prompts read better unwrapped
+    "E402",  # lesson scripts set sys.path before importing the shared kit
+    "E701", "E702",  # short one-line statements in tests and stand-in servers
+    "E731",  # small lambdas given a name
+    "E741",  # single-letter names in maths
+    "B905",  # zip without strict: lengths are equal by construction here
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Learner files keep imports that the code you write will need.
+"lessons/[0-9]*/*.py" = ["F401", "F841"]

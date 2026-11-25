@@ -6,7 +6,7 @@ what the triage agent is scored against.
 import os
 import sqlite3
 from dataclasses import asdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -35,7 +35,7 @@ class NewNote(BaseModel):
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class Tickets:
@@ -175,7 +175,7 @@ class Tickets:
         try:
             end = datetime.strptime(before, "%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
-            raise HTTPException(422, "before must look like 2026-01-31T09:30:00Z")
+            raise HTTPException(422, "before must look like 2026-01-31T09:30:00Z") from None
         start = (end - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
         with self.conn() as c:
             rows = c.execute("SELECT * FROM deploy WHERE service = ? AND deployed_at > ? AND deployed_at <= ? "

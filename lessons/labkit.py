@@ -3,7 +3,7 @@ choice, and saving training runs so the course app can chart them."""
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -27,7 +27,7 @@ class CharTokenizer:
         try:
             return [self._to_id[c] for c in text]
         except KeyError as err:
-            raise ValueError(f"The character {err.args[0]!r} is not in the vocabulary this tokenizer was built from.")
+            raise ValueError(f"The character {err.args[0]!r} is not in the vocabulary this tokenizer was built from.") from None
 
     def decode(self, ids) -> str:
         return "".join(self.chars[int(i)] for i in ids)
@@ -48,6 +48,6 @@ def save_run(name: str, record: dict, runs_dir: str = "data/runs") -> str:
     out = Path(runs_dir)
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"{name}.json"
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    stamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     path.write_text(json.dumps({**record, "name": name, "saved_at": stamp}, indent=1))
     return str(path)

@@ -6,15 +6,15 @@ the training corpus and the held-back answers into data/.
 """
 import json
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from servicedesk.catalog import PATTERNS, REGIONS, SERVICES, SUPPLIERS
 from servicedesk.troubleshooting import build_thread
 
 SEED = 20261124
-START = datetime(2025, 5, 20, tzinfo=timezone.utc)
-END = datetime(2026, 11, 19, tzinfo=timezone.utc)
+START = datetime(2025, 5, 20, tzinfo=UTC)
+END = datetime(2026, 11, 19, tzinfo=UTC)
 TOTAL, HISTORY = 500, 400
 PRIORITY_COUNTS = {1: 25, 2: 75, 3: 225, 4: 175}
 PER_PATTERN = {1: 7, 2: 8, 3: 17}  # incidents per pattern by typical priority; priority-4 patterns share the rest

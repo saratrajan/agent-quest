@@ -107,6 +107,7 @@ def test_eval_labels_list_the_history_incidents_with_the_same_cause():
 
 def test_existing_data_gets_the_newer_labels_without_touching_the_database(tmp_path):
     import json
+
     from servicedesk.generate import main
     main(str(tmp_path))
     db = tmp_path / "timetravel.db"

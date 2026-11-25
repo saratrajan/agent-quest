@@ -1,7 +1,7 @@
 """End to end: generate the data, start both apps, load every page."""
+from conftest import write_lessons
 from fastapi.testclient import TestClient
 
-from conftest import write_lessons
 from course.app import create_app as course_app
 from servicedesk import generate
 from servicedesk.app import create_app as desk_app
