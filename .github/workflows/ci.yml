@@ -1,6 +1,7 @@
 # Checks for every pull request and every push to main (trunk-based: main is
 # the only long-lived branch, so it is checked both before and after a merge).
-# The jobs themselves live in saratrajan/ci-cd-templates and run on
+# The jobs themselves live in saratrajan/ci-cd-templates, called at a fixed
+# release (raise the version below to adopt a newer one), and run on
 # GitHub-hosted runners. Nothing here needs Ollama or a GPU: the experiments
 # that call a local model are run by hand, not in CI.
 name: CI
@@ -23,19 +24,19 @@ concurrency:
 jobs:
   python-lint:
     name: Python lint
-    uses: saratrajan/ci-cd-templates/.github/workflows/lint-python.yml@v1
+    uses: saratrajan/ci-cd-templates/.github/workflows/lint-python.yml@v1.0.0
 
   markdown-lint:
     name: Markdown lint
-    uses: saratrajan/ci-cd-templates/.github/workflows/lint-markdown.yml@v1
+    uses: saratrajan/ci-cd-templates/.github/workflows/lint-markdown.yml@v1.0.0
 
   shell-lint:
     name: Shell lint
-    uses: saratrajan/ci-cd-templates/.github/workflows/lint-shell.yml@v1
+    uses: saratrajan/ci-cd-templates/.github/workflows/lint-shell.yml@v1.0.0
 
   tests:
     name: Unit tests
-    uses: saratrajan/ci-cd-templates/.github/workflows/test-python.yml@v1
+    uses: saratrajan/ci-cd-templates/.github/workflows/test-python.yml@v1.0.0
     with:
       # The CPU build of PyTorch: the lesson checks need it, and the default
       # Linux build would download several gigabytes of GPU libraries.
@@ -44,4 +45,4 @@ jobs:
 
   secrets:
     name: Secret scan
-    uses: saratrajan/ci-cd-templates/.github/workflows/scan-secrets.yml@v1
+    uses: saratrajan/ci-cd-templates/.github/workflows/scan-secrets.yml@v1.0.0
