@@ -1,0 +1,15 @@
+<p>The bigram model from session 2 predicts from one token. Consider what that throws away. Both of these end in the same word:</p>
+<pre class="sample">Card payments are failing  →  likely next: "at the 3-D Secure step"
+Unit tests are failing     →  likely next: "on the main branch"</pre>
+<p>Seen from the last token alone, the two are identical. What should come next depends on a word several positions back. A useful model needs every position to draw on the earlier tokens that matter to it, however far back they are.</p>
+
+<p>The crudest way to give a position some context is to <strong>average</strong> the vectors of everything before it. That mixes in the past, but treats every earlier token as equally important, and "are" matters far less than "payments" here.</p>
+
+<p><strong>Attention</strong> is a weighted average where the weights are computed from the content. Each position asks a question, every earlier position offers a description of itself, and the better a description matches the question the more weight that position gets. In the sentence above, the position after "failing" can put most of its weight on "payments".</p>
+
+<p>Three things to carry into the next step:</p>
+<ul>
+  <li>The output for a position is a <strong>blend of earlier positions' information</strong>, not a single one chosen.</li>
+  <li>The weights in the blend are <strong>learned to be useful</strong> for predicting the next token. Nobody tells the model what to look at.</li>
+  <li>The weights for one position always <strong>sum to 1</strong>, because they come from a softmax, the same function you wrote in session 2.</li>
+</ul>

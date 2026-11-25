@@ -1,0 +1,32 @@
+<p>Scores can be any numbers. Two steps turn them into a single measure of how wrong the model was.</p>
+
+<p><strong>Step 1, softmax: scores to probabilities.</strong> Raise <em>e</em> to each score, then divide by the total so they sum to 1.</p>
+<p class="math">p<sub>i</sub> = e<sup>z<sub>i</sub></sup> / Σ<sub>j</sub> e<sup>z<sub>j</sub></sup></p>
+
+<p><strong>Step 2, cross-entropy: the loss.</strong> Look only at the probability given to the token that actually came next, and take minus its logarithm.</p>
+<p class="math">L = − log p<sub>target</sub></p>
+
+<p>Work it once by hand. After "payments are", three candidate next tokens have scores 2.0, 1.0 and 0.1:</p>
+<table class="plain">
+  <thead><tr><th>Token</th><th>Score z</th><th>e<sup>z</sup></th><th>Probability</th><th>Loss if this was the real next token</th></tr></thead>
+  <tbody>
+    <tr><td>failing</td><td>2.0</td><td>7.389</td><td>0.659</td><td>0.417</td></tr>
+    <tr><td>timing</td><td>1.0</td><td>2.718</td><td>0.242</td><td>1.417</td></tr>
+    <tr><td>resolved</td><td>0.1</td><td>1.105</td><td>0.099</td><td>2.317</td></tr>
+    <tr><td></td><td></td><td>sum 11.212</td><td>sum 1.000</td><td></td></tr>
+  </tbody>
+</table>
+<p>If the real next token was "failing", the model put 66% on it and the loss is 0.417. If it was "resolved", the model put only 10% there and pays 2.317. Being confidently wrong is expensive; that is the property that makes this loss useful.</p>
+
+<p>Move the scores and the target below and watch both numbers.</p>
+<div data-widget="softmax-explorer"></div>
+<script src="/lessons-static/02-next-token/widgets/softmax-explorer.js"></script>
+
+<p>Two reference points worth memorising:</p>
+<ul>
+  <li><strong>A perfect prediction</strong> has probability 1 and loss 0.</li>
+  <li><strong>A uniform guess</strong> over <em>V</em> tokens has loss log <em>V</em>. For our 77 characters that is 4.344. A model scoring above that is worse than knowing nothing.</li>
+</ul>
+<p>The loss you see during training is the average of this number over every prediction in the batch.</p>
+
+<p class="ref">Source for the neural approach to next-word prediction: Bengio, Ducharme, Vincent and Jauvin (2003), <em>A Neural Probabilistic Language Model</em>.</p>

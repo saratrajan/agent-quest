@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "base.html" import icon %}
+{% set plabel = {1: "Critical", 2: "High", 3: "Moderate", 4: "Low"} %}
+{% block title %}{{ i.number }} · Service Desk{% endblock %}
+{% macro row(label, value, cls="") %}<div class="kv"><dt>{{ label }}</dt><dd class="{{ cls }}">{{ value }}</dd></div>{% endmacro %}
+{% macro note(n) %}<div class="note{{ ' agent' if n.author == 'triage-agent' }}"><span class="meta"><b>{{ n.author }}</b>{% if n.role %} · {{ n.role }}{% elif n.author == "triage-agent" %} · automated triage{% endif %} · <span class="num">{{ n.at | replace("T", " ") | replace("Z", "") }}</span></span><p>{{ n.text }}</p></div>{% endmacro %}
+{% macro untriaged(what) %}<div class="empty"><p>This incident has not been triaged yet, so there {{ what }} to show. Set its service and priority first.</p></div>{% endmacro %}
+{% block main %}
+<a class="back" href="/incidents?view={{ 'resolved' if i.state == 'Resolved' else 'open' }}">{{ icon("back") }}Back to incidents</a>
+<div class="pagehead">
+  <div class="title">
+    {% if i.priority %}<span class="priority p{{ i.priority }}">{{ plabel[i.priority] }}</span>{% else %}<span class="priority none">Not triaged</span>{% endif %}
+    <h1><span class="num">{{ i.number }}</span> {{ i.short_description }}</h1>
+  </div>
+  <a class="btn primary" href="?tab=timeline#note-text">Add update</a>
+</div>
+<p class="sub">Opened <span class="num">{{ i.opened_at | replace("T", " ") | replace("Z", " UTC") }}</span> · Owned by {{ i.assignment_group or "nobody yet" }} · Reported by {{ i.source }}</p>
+<nav class="tabs" aria-label="Incident sections">
+  {% for key, name in tabs.items() %}<a href="?tab={{ key }}" {% if tab == key %}aria-current="page"{% endif %}>{{ name }}</a>{% endfor %}
+</nav>
+
+{% if tab == "overview" %}
+<div class="split wide">
+  <div class="card">
+    <h2>Incident summary</h2>
+    <p class="text">{{ i.description }}</p>
+    <dl class="kvs">
+      <div class="kv"><dt>Priority</dt><dd>{% if i.priority %}<span class="priority p{{ i.priority }}">P{{ i.priority }} · {{ plabel[i.priority] }}</span>{% if i.priority_at_open and i.priority_at_open != i.priority %} <span class="dim">opened as P{{ i.priority_at_open }}</span>{% endif %}{% else %}<span class="dim">Not set{% if i.priority_at_open %}, reported as P{{ i.priority_at_open }}{% endif %}</span>{% endif %}</dd></div>
+      <div class="kv"><dt>Status</dt><dd><span class="state state-{{ i.state | lower }}">{{ i.state }}</span></dd></div>
+      {{ row("Affected service", i.service or "Not set", "" if i.service else "dim") }}
+      {{ row("Assignment group", i.assignment_group or "Unassigned", "" if i.assignment_group else "dim") }}
+      {{ row("Reported by", i.source) }}
+      {% if i.root_cause_category %}{{ row("Root cause", i.root_cause_category) }}{% endif %}
+      {% if i.close_code %}{{ row("Close code", i.close_code) }}{% endif %}
+      {% if i.duplicate_of %}<div class="kv"><dt>Duplicate of</dt><dd><a href="/incidents/{{ i.duplicate_of }}">{{ i.duplicate_of }}</a></dd></div>{% endif %}
+    </dl>
+    {% if i.resolution %}<h2>Resolution</h2><p class="text">{{ i.resolution }}</p>{% endif %}
+    {% if deploys or best %}<h2>Related artifacts</h2>
+    <ul class="artifacts">
+      {% for d in deploys %}<li>Deploy <b>{{ d.version }}</b> · {{ d.summary }} · {{ d.author }} · <span class="num">{{ d.deployed_at | replace("T", " ") | replace("Z", "") }}</span></li>{% endfor %}
+      {% for rb in best %}<li>Runbook: <a href="/runbooks/{{ rb.id }}">{{ rb.title }}</a></li>{% endfor %}
+    </ul>{% endif %}
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h2>Incident status</h2>
+      <ol class="stepper">{% for st in steps %}<li data-step-done="{{ 'true' if st.done else 'false' }}"><span class="node"></span><b>{{ st.name }}</b><span class="num">{{ (st.at[5:16] | replace("T", " ")) if st.at and st.done else "" }}</span></li>{% endfor %}</ol>
+    </div>
+    <div class="card">
+      <div class="cardhead"><h2>Updates</h2><a href="/incidents/{{ i.number }}?tab=timeline">View all →</a></div>
+      {% if not i.work_notes %}<p class="dim">No updates yet.</p>{% endif %}
+      {% for n in (i.work_notes | reverse | list)[:3] %}{{ note(n) }}{% endfor %}
+    </div>
+  </div>
+</div>
+
+{% elif tab == "timeline" %}
+<div class="card narrow">
+  <h2>Timeline</h2>
+  {% for e in errors %}<p class="error" role="alert">{{ e }}</p>{% endfor %}
+  <form method="post" action="/incidents/{{ i.number }}/notes" class="noteform">
+    <label for="note-author">Your name</label><input id="note-author" name="author" value="{{ draft.author or 'on-call' }}" maxlength="100" required>
+    <label for="note-text">Work note</label><textarea id="note-text" name="text" rows="3" maxlength="10000" required>{{ draft.text or '' }}</textarea>
+    <button class="btn primary" type="submit">Post update</button>
+  </form>
+  {% if not i.work_notes %}<p class="dim">No updates yet.</p>{% endif %}
+  {% for n in i.work_notes | reverse %}{{ note(n) }}{% endfor %}
+</div>
+
+{% elif tab == "related" %}
+{% if not triaged %}{{ untriaged("are no related incidents") }}{% elif not related %}<div class="empty"><p>No other incidents on this service within a week of this one.</p></div>{% else %}
+<div class="tablewrap card"><table class="list">
+  <thead><tr><th>Number</th><th>Short description</th><th>Priority</th><th>Why related</th><th>Opened</th></tr></thead>
+  <tbody>{% for r in related %}<tr><td><a href="/incidents/{{ r.number }}">{{ r.number }}</a></td><td>{{ r.short_description }}</td><td><span class="priority p{{ r.priority }}">{{ plabel[r.priority] }}</span></td><td>{{ "Linked duplicate" if r.linked else "Same service, within a week" }}</td><td class="num">{{ r.opened_at[:16] | replace("T", " ") }}</td></tr>{% endfor %}</tbody>
+</table></div>{% endif %}
+
+{% elif tab == "services" %}
+{% if not service %}{{ untriaged("is no affected service") }}{% else %}
+<div class="card narrow">
+  <h2>{{ service.name }}</h2>
+  <dl class="kvs">{{ row("Owning team", service.team) }}{{ row("Criticality", "Tier " ~ service.tier) }}{{ row("Depends on", service.depends_on | join(", ") or "Nothing") }}</dl>
+  <h2>Changes in the two hours before this incident</h2>
+  {% if not deploys %}<p class="dim">No deploys to {{ service.id }} in that window.</p>{% else %}<ul class="artifacts">{% for d in deploys %}<li><b>{{ d.version }}</b> · {{ d.summary }} · {{ d.author }} · <span class="num">{{ d.deployed_at | replace("T", " ") | replace("Z", "") }}</span></li>{% endfor %}</ul>{% endif %}
+</div>{% endif %}
+
+{% elif tab == "knowledge" %}
+{% if not triaged %}{{ untriaged("are no runbooks") }}{% elif not books %}<div class="empty"><p>No runbooks are filed for {{ i.service }}.</p></div>{% else %}
+<div class="card narrow"><h2>Runbooks for {{ i.service }}</h2>
+  <ul class="artifacts">{% for rb in books %}<li><a href="/runbooks/{{ rb.id }}">{{ rb.title }}</a> · {{ rb.steps | length }} steps</li>{% endfor %}</ul>
+</div>{% endif %}
+{% endif %}
+{% endblock %}

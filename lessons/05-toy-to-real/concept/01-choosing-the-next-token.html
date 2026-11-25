@@ -1,0 +1,31 @@
+<p>A model does not output text. It outputs a score for every token, and a separate step picks one. That step, <strong>sampling</strong>, has three controls, and every model you will ever call exposes them. They change the output a great deal without touching the model.</p>
+
+<p><strong>Temperature</strong> divides the scores before the softmax. Below 1 it sharpens the distribution towards the favourite; above 1 it flattens it. On scores [2, 1, 0]:</p>
+<table class="plain">
+  <thead><tr><th>Temperature</th><th>Scores after dividing</th><th>Probabilities</th></tr></thead>
+  <tbody>
+    <tr><td>1.0</td><td>[2, 1, 0]</td><td>0.665, 0.245, 0.090</td></tr>
+    <tr><td>0.5</td><td>[4, 2, 0]</td><td>0.867, 0.117, 0.016</td></tr>
+    <tr><td>2.0</td><td>[1, 0.5, 0]</td><td>0.506, 0.307, 0.186</td></tr>
+  </tbody>
+</table>
+<p>A temperature of 0 is a convention meaning "always take the most likely token". It is handled as a special case, since nothing can be divided by zero.</p>
+
+<p><strong>Top-k</strong> keeps the <em>k</em> most likely tokens and discards the rest. <strong>Top-p</strong>, also called nucleus sampling, keeps the smallest set of most-likely tokens whose probabilities add up to at least <em>p</em>. On probabilities [0.5, 0.3, 0.15, 0.05]:</p>
+<table class="plain">
+  <thead><tr><th>Setting</th><th>Kept</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>top-k = 2</td><td>first two</td><td>the two highest, whatever their probabilities</td></tr>
+    <tr><td>top-p = 0.75</td><td>first two</td><td>0.5 + 0.3 = 0.8 reaches 0.75</td></tr>
+    <tr><td>top-p = 0.85</td><td>first three</td><td>0.8 falls short, so the third is needed</td></tr>
+  </tbody>
+</table>
+<p>Top-k cuts a fixed number; top-p adapts. When the model is sure, top-p keeps one or two tokens; when it is unsure, it keeps many. Both exist to remove the long tail of unlikely tokens, which is where nonsense comes from: each tail token is improbable, but together they are picked often enough to derail a long answer.</p>
+
+<p>Try the three controls together on one distribution.</p>
+<div data-widget="sampling-explorer"></div>
+<script src="/lessons-static/05-toy-to-real/widgets/sampling-explorer.js"></script>
+
+<p>The order matters and is the one your code will use: temperature, then top-k, then top-p, then a random draw from what is left.</p>
+
+<p class="ref">Source: Holtzman et al. (2020), <em>The Curious Case of Neural Text Degeneration</em>, which introduced nucleus sampling.</p>

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "base.html" import icon %}
+{% block title %}{{ rb.title }} · Service Desk{% endblock %}
+{% block main %}
+<a class="back" href="/services">{{ icon("back") }}Back to knowledge</a>
+<div class="pagehead"><h1>{{ rb.title }}</h1><span class="state">Runbook</span></div>
+<p class="sub"><span class="num">{{ rb.id }}</span> · Service: {{ rb.service }}</p>
+<div class="card narrow"><ol class="steps">{% for step in rb.steps %}<li>{{ step }}</li>{% endfor %}</ol></div>
+{% endblock %}

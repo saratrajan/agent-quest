@@ -1,0 +1,8 @@
+.venv/
+data/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.superpowers/
+# working notes, plans and mock-ups are kept locally
+docs/

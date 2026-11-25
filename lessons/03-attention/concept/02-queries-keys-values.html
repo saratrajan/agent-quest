@@ -1,0 +1,27 @@
+<p>Each token's vector is turned into three smaller vectors by three learned projections:</p>
+<ul>
+  <li>a <strong>query</strong>: what this position is looking for;</li>
+  <li>a <strong>key</strong>: what this position can be found by;</li>
+  <li>a <strong>value</strong>: what this position hands over if it is attended to.</li>
+</ul>
+<p>The score between a query and a key is their dot product, large when they point the same way. The scores go through a softmax to become weights, and the output is the weighted sum of the values:</p>
+<p class="math">Attention(Q, K, V) = softmax( Q K<sup>T</sup> / √d ) V</p>
+
+<p>Work the third position of a three-token example by hand. Vectors have <em>d</em> = 2 numbers, so the scaling is √2 = 1.414.</p>
+<table class="plain">
+  <thead><tr><th>Position</th><th>Key</th><th>Value</th><th>Query 3 · key</th><th>÷ √2</th><th>e<sup>score</sup></th><th>Weight</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>[1, 0]</td><td>[1, 0]</td><td>1</td><td>0.707</td><td>2.028</td><td>0.248</td></tr>
+    <tr><td>2</td><td>[0, 1]</td><td>[0, 1]</td><td>1</td><td>0.707</td><td>2.028</td><td>0.248</td></tr>
+    <tr><td>3</td><td>[1, 1]</td><td>[2, 2]</td><td>2</td><td>1.414</td><td>4.113</td><td>0.503</td></tr>
+  </tbody>
+</table>
+<p>Query 3 is [1, 1]. The output for position 3 is 0.248 × [1, 0] + 0.248 × [0, 1] + 0.503 × [2, 2] = [1.255, 1.255]. Those are the numbers your first test checks.</p>
+
+<p>Change the vectors below and watch the weights move. Each row of the grid is one position's weights over the positions it can see.</p>
+<div data-widget="attention-grid"></div>
+<script src="/lessons-static/03-attention/widgets/attention-grid.js"></script>
+
+<p><strong>Why divide by √d?</strong> A dot product adds up <em>d</em> terms, so its size grows with <em>d</em>. Large scores push the softmax to put nearly all the weight on one token, and a softmax in that state passes back almost no gradient, so the head stops learning. Dividing by √d keeps the scores at a steady size whatever the dimension. You will measure this in the first experiment.</p>
+
+<p class="ref">Source: Vaswani et al. (2017), <em>Attention Is All You Need</em>, section 3.2.</p>

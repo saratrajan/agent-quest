@@ -1,0 +1,25 @@
+<p>The loss says how wrong the model is. The <strong>gradient</strong> says how to be less wrong: for every number in the model, it gives the direction in which the loss increases. Move each number a small step the opposite way and the loss goes down.</p>
+<p class="math">w ← w − η · ∂L/∂w, where η is the learning rate</p>
+
+<p>For softmax followed by cross-entropy the gradient with respect to the scores has a form you can compute in your head: <strong>the probability, minus 1 for the correct token</strong>.</p>
+<table class="plain">
+  <thead><tr><th>Token</th><th>Score</th><th>Probability</th><th>Gradient (target is "failing")</th><th>Score after one step, η = 1</th></tr></thead>
+  <tbody>
+    <tr><td>failing</td><td>2.0</td><td>0.659</td><td>0.659 − 1 = −0.341</td><td>2.341</td></tr>
+    <tr><td>timing</td><td>1.0</td><td>0.242</td><td>0.242</td><td>0.758</td></tr>
+    <tr><td>resolved</td><td>0.1</td><td>0.099</td><td>0.099</td><td>0.001</td></tr>
+  </tbody>
+</table>
+<p>The correct token's score went up, the others went down in proportion to how much probability they had wrongly taken. Recompute the loss with the new scores and it has fallen from 0.417 to about 0.264. That is one step of learning, by hand.</p>
+
+<p>PyTorch computes these gradients for every number in the model automatically. Your part is the loop around it, four lines that are the same for a bigram table and for a model with billions of parameters:</p>
+<ol>
+  <li><strong>Clear</strong> the gradients left from the previous step.</li>
+  <li><strong>Forward:</strong> run the batch through the model to get the loss.</li>
+  <li><strong>Backward:</strong> <code>loss.backward()</code> fills in the gradient for every parameter.</li>
+  <li><strong>Step:</strong> the optimizer moves every parameter a little against its gradient.</li>
+</ol>
+
+<p>The <strong>learning rate</strong> is the size of that step. Too small and training crawls; too large and the loss jumps around or grows. You will see both in the first experiment.</p>
+
+<p>One limit to keep in mind as you train: a bigram model sees one token of context. It can learn that "P" is often followed by a digit, and nothing about which digit this ticket deserves. Session 3 removes that limit.</p>

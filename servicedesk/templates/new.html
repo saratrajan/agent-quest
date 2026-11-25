@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}New incident · Service Desk{% endblock %}
+{% block main %}
+<div class="pagehead"><h1>New incident</h1></div>
+{% for e in errors %}<p class="error" role="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="/incidents/new" class="card narrow form">
+  <label for="n-short">Short description</label>
+  <input id="n-short" name="short_description" value="{{ values.short_description or '' }}" maxlength="200" required>
+  <label for="n-desc">Description</label>
+  <textarea id="n-desc" name="description" rows="7" maxlength="10000" required>{{ values.description or '' }}</textarea>
+  <label for="n-source">Reported by</label>
+  <select id="n-source" name="source">{% for s in sources %}<option value="{{ s }}" {{ 'selected' if values.source == s }}>{{ s }}</option>{% endfor %}</select>
+  <div class="row"><button class="btn primary" type="submit">Submit</button><a class="btn" href="/incidents?view=open">Cancel</a></div>
+</form>
+{% endblock %}

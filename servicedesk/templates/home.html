@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set plabel = {1: "Critical", 2: "High", 3: "Moderate", 4: "Low"} %}
+{% block main %}
+<section class="hero">
+  <div>
+    <h1>Incident Management</h1>
+    <p class="tag">Detect. Resolve. Restore.</p>
+    {% if ready %}
+    <p class="status"><span class="dot {{ 'warn' if s.open else 'ok' }}"></span>{% if s.open %}{{ s.open }} incidents waiting for triage{% else %}No open incidents{% endif %}</p>
+    <p class="asof">Latest incident opened {{ s.as_of | replace("T", " ") | replace("Z", " UTC") }}</p>
+    {% endif %}
+  </div>
+  <a class="btn light" href="/incidents?view=open">Open the queue</a>
+</section>
+{% if not ready %}
+<div class="empty"><h2>No incident data yet</h2><p>Generate the incidents by running <code>make data</code> in the project folder, then reload this page.</p></div>
+{% else %}
+<section class="kpis">
+  <div class="kpi"><span class="ic red"></span><div><b data-kpi="open">{{ s.open }}</b><span>Open incidents</span><small>waiting for triage</small></div></div>
+  <div class="kpi"><span class="ic blue"></span><div><b>{{ avg }}</b><span>Avg resolution time</span><small>across {{ s.resolved }} resolved</small></div></div>
+  <div class="kpi"><span class="ic violet"></span><div><b>{{ s.last_30_days }}</b><span>Incidents (30d)</span><small>{% if change is not none %}{{ "up" if change > 0 else "down" }} {{ change | abs }}% on the prior 30 days{% else %}no earlier period to compare{% endif %}</small></div></div>
+  <div class="kpi"><span class="ic amber"></span><div><b>{{ s.reprioritised_pct }}%</b><span>Re-prioritised</span><small>opened at the wrong priority</small></div></div>
+</section>
+<section class="split">
+  <div class="card">
+    <h2>Open incidents by reported priority</h2>
+    <div class="donutrow">
+      <svg class="donut" viewBox="0 0 100 100" role="img" aria-label="Open incidents by the priority they were opened at: {% for d in donut %}{{ plabel[d.priority] }} {{ d.count }}{{ ', ' if not loop.last }}{% endfor %}">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#e8edf5" stroke-width="12"/>
+        {% for d in donut %}{% if d.count %}<circle class="seg p{{ d.priority }}" cx="50" cy="50" r="42" fill="none" stroke-width="12" stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.offset }}" transform="rotate(-90 50 50)"/>{% endif %}{% endfor %}
+        <text x="50" y="49" text-anchor="middle" class="big">{{ s.open }}</text><text x="50" y="62" text-anchor="middle" class="small">Open</text>
+      </svg>
+      <ul class="legend">{% for d in donut %}<li><span class="sw p{{ d.priority }}"></span>{{ plabel[d.priority] }}<b data-open-priority="{{ d.priority }}">{{ d.count }}</b></li>{% endfor %}</ul>
+    </div>
+    <p class="hint">This is the priority each reporter chose. The real priority is set at triage.</p>
+  </div>
+  <div class="card">
+    <div class="cardhead"><h2>Recently opened</h2><a href="/incidents?view=open">View all →</a></div>
+    <ul class="recent">{% for i in s.recent %}
+      <li data-recent="{{ i.number }}"><span class="sw p{{ i.priority or i.priority_at_open or 4 }}"></span><a href="/incidents/{{ i.number }}">{{ i.number }}</a><span class="what">{{ i.short_description }}</span><span class="when">{{ i.opened_at[:16] | replace("T", " ") }}</span></li>
+    {% endfor %}</ul>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

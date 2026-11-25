@@ -1,0 +1,20 @@
+<p>One attention head learns one way of looking back. Language needs several at once: which word a pronoun refers to, which service a symptom belongs to, where the current line began. A transformer runs <strong>several heads side by side</strong> on the same input and joins their outputs.</p>
+
+<p>The sizes are arranged so the result is as wide as the input. With vectors of 128 numbers and 4 heads, each head produces 128 ÷ 4 = 32 numbers per position; concatenated they make 128 again, and a final linear layer mixes them.</p>
+
+<p>Attention only gathers: its output is a blend of earlier positions' values. Something has to work on what was gathered. That is the <strong>feed-forward layer</strong>: a small two-layer network applied to each position on its own, expanding to four times the width and back.</p>
+
+<table class="plain">
+  <thead><tr><th>Part</th><th>What it does</th><th>Looks at other positions?</th></tr></thead>
+  <tbody>
+    <tr><td>Multi-head attention</td><td>Each position collects information from earlier positions</td><td>Yes</td></tr>
+    <tr><td>Feed-forward</td><td>Each position processes what it collected</td><td>No</td></tr>
+  </tbody>
+</table>
+<p>One of each makes a <strong>block</strong>. A GPT is a stack of identical blocks: gather, process, gather, process. Later blocks attend over the already-processed outputs of earlier ones, which is how the model builds up from characters to words to the shape of a whole incident note.</p>
+
+<p>Two more ingredients complete the model:</p>
+<ul>
+  <li><strong>Position embeddings.</strong> Session 3 showed that attention has no sense of order. So the model learns a vector for each position, 0 to 127, and adds it to the token's vector at the very start. After that, "P" at position 0 and "P" at position 40 are different inputs.</li>
+  <li><strong>The output layer.</strong> After the last block, a linear layer turns each position's 128 numbers back into one score per token in the vocabulary, the logits from session 2.</li>
+</ul>

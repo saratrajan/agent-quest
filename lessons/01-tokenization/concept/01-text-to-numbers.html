@@ -1,0 +1,23 @@
+<p>A language model does arithmetic on numbers. Text has to become a sequence of integers before the model sees it, and the integers have to become text again on the way out. The component that does both is the <strong>tokenizer</strong>. It is trained separately from the model and sits in front of it.</p>
+
+<p>Take a real ticket from the Time Travel Inc. queue:</p>
+<pre class="sample">Card payments failing at 3-D Secure step</pre>
+
+<p>Every character is already stored as bytes. In UTF-8 this sentence is 40 bytes, each a number from 0 to 255:</p>
+<pre class="sample">C   a   r   d   ␣   p   a   y   m   e   n   t   s  ...
+67  97  114 100 32  112 97  121 109 101 110 116 115 ...</pre>
+
+<p>That gives three obvious ways to cut text into pieces, and each has a cost.</p>
+
+<table class="plain">
+  <thead><tr><th>Cut by</th><th>Vocabulary</th><th>The sentence above</th><th>What goes wrong</th></tr></thead>
+  <tbody>
+    <tr><td>Byte</td><td>256</td><td>40 tokens</td><td>Sequences are long. The model's context window is counted in tokens, so you fit less in, and it must learn spelling from scratch.</td></tr>
+    <tr><td>Word</td><td>hundreds of thousands</td><td>7 tokens</td><td>Any word not seen in training has no number at all: a new supplier name, <code>INC0010450</code>, a typo.</td></tr>
+    <tr><td>Sub-word</td><td>you choose, often 30,000 to 100,000</td><td>about 9 tokens</td><td>A middle path: common words are one token, rare ones are spelled from pieces. Nothing is ever out of vocabulary.</td></tr>
+  </tbody>
+</table>
+
+<p>Formally, a tokenizer is a pair of functions over a vocabulary <em>V</em> of size |<em>V</em>|:</p>
+<p class="math">encode : text → (t<sub>1</sub>, …, t<sub>n</sub>), t<sub>i</sub> ∈ {0, …, |V| − 1}  decode : (t<sub>1</sub>, …, t<sub>n</sub>) → text</p>
+<p>with the requirement that <span class="math">decode(encode(x)) = x</span> for every string <em>x</em>. Starting from bytes guarantees that requirement, because any text at all is a sequence of bytes. The question for the next step is how to choose the larger pieces.</p>

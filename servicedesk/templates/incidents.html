@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set titles = {"open": "Open incidents", "resolved": "Resolved incidents", "all": "All incidents"} %}
+{% set plabel = {1: "Critical", 2: "High", 3: "Moderate", 4: "Low"} %}
+{% block title %}{{ titles[view] }} · Service Desk{% endblock %}
+{% block main %}
+<div class="pagehead"><h1>{{ titles[view] }}</h1><a class="btn primary" href="/incidents/new">New incident</a></div>
+<nav class="tabs" aria-label="Queues">
+  {% for v, name in [("open", "Open"), ("resolved", "Resolved"), ("all", "All")] %}<a href="/incidents?view={{ v }}" {% if view == v %}aria-current="page"{% endif %}>{{ name }}</a>{% endfor %}
+</nav>
+{% if not ready %}
+<div class="empty"><h2>No incident data yet</h2><p>Generate the incidents by running <code>make data</code> in the project folder, then reload this page.</p></div>
+{% else %}
+<form class="filters card" method="get" action="/incidents">
+  <input type="hidden" name="view" value="{{ view }}">
+  <label for="f-q">Search</label><input type="search" name="q" id="f-q" value="{{ f.q or '' }}" placeholder="Words in the description">
+  {% if view != "open" %}
+  <label for="f-priority">Priority</label><select name="priority" id="f-priority"><option value="">Any</option>{% for p in [1,2,3,4] %}<option value="{{ p }}" {{ 'selected' if f.priority == p }}>{{ plabel[p] }}</option>{% endfor %}</select>
+  <label for="f-service">Service</label><select name="service" id="f-service"><option value="">Any</option>{% for s in services %}<option value="{{ s.id }}" {{ 'selected' if f.service == s.id }}>{{ s.name }}</option>{% endfor %}</select>
+  {% endif %}
+  <label for="f-source">Reported by</label><select name="source" id="f-source"><option value="">Any</option>{% for s in sources %}<option value="{{ s }}" {{ 'selected' if f.source == s }}>{{ s }}</option>{% endfor %}</select>
+  <button class="btn" type="submit">Apply</button>
+</form>
+<p class="count">{{ total }} incidents{% if view == "open" %} waiting for triage{% endif %}</p>
+{% if not rows %}<div class="empty"><p>No incidents match these filters.</p></div>{% else %}
+<div class="tablewrap card"><table class="list">
+  <thead><tr><th>Number</th><th>Short description</th><th>Priority</th><th>State</th><th>Service</th><th>Assignment group</th><th>Reported by</th><th>Opened</th></tr></thead>
+  <tbody>{% for i in rows %}
+  <tr data-incident="{{ i.number }}">
+    <td><a href="/incidents/{{ i.number }}">{{ i.number }}</a></td>
+    <td>{{ i.short_description }}</td>
+    <td>{% if i.priority %}<span class="priority p{{ i.priority }}">{{ plabel[i.priority] }}</span>{% else %}<span class="dim">reported as {{ plabel.get(i.priority_at_open, "unknown") }}</span>{% endif %}</td>
+    <td><span class="state state-{{ i.state | lower }}">{{ i.state }}</span></td>
+    <td>{{ i.service or "" }}</td>
+    <td>{% if i.assignment_group %}{{ i.assignment_group }}{% else %}<span class="dim">Unassigned</span>{% endif %}</td>
+    <td>{{ i.source }}</td>
+    <td class="num">{{ i.opened_at[:16] | replace("T", " ") }}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+<nav class="pager" aria-label="Pages">
+  {% if page > 1 %}<a class="btn" href="{{ link(page - 1) }}">Previous</a>{% endif %}
+  <span>Page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a class="btn" href="{{ link(page + 1) }}">Next</a>{% endif %}
+</nav>
+{% endif %}{% endif %}
+{% endblock %}

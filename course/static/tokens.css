@@ -1,0 +1,18 @@
+/* Course app visual language: a light learning-platform look with a navy
+   top bar and blue actions, following the mock in docs/mocks. */
+:root{
+  --bg:#f4f6fb; --surface:#ffffff; --surface-raised:#ffffff; --text:#172338; --text-muted:#5b6b82; --border:#e1e7f0;
+  --navy:#0c1e3c; --navy-2:#13305e;
+  --accent:#1d6fe0; --accent-soft:#e6f0fd; --accent-contrast:#ffffff;
+  --phase2:#6d4bc4; --phase2-soft:#efeafc;
+  --success:#1e8e3e; --success-soft:#e3f4e8; --warning:#b45309; --warning-soft:#fdf0dc; --danger:#c5221f; --danger-soft:#fde7e5;
+  --p1:#c5221f; --p2:#b45309; --p3:#1d6fe0; --p4:#5b6b82;
+  --font-display:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --step-1:.78rem; --step-2:.9rem; --step-3:1rem; --step-4:1.15rem; --step-5:1.5rem; --step-6:2.1rem;
+  --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.5rem; --space-6:2rem; --space-7:2.75rem; --space-8:4rem;
+  --radius:10px;
+  --diagram-1:#1d6fe0; --diagram-2:#6d4bc4; --diagram-3:#b45309; --diagram-4:#c5221f; --diagram-5:#5b6b82;
+  color-scheme:light;
+}

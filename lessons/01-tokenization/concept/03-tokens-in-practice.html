@@ -1,0 +1,24 @@
+<p>Tokens are the unit everything else in this course is measured in.</p>
+<ul>
+  <li><strong>Context window.</strong> A model reads at most a fixed number of tokens at once. The ticket you are triaging, the past incidents you retrieve for it, the runbook and the model's own answer all share that budget.</li>
+  <li><strong>Cost and speed.</strong> Hosted models charge per token in and per token out, and a model generates one token at a time. Twice the tokens is roughly twice the bill and twice the wait.</li>
+  <li><strong>What the model can see.</strong> The model never sees letters, only token numbers. Whatever the tokenizer splits awkwardly, the model has to reassemble.</li>
+</ul>
+
+<p>That last point matters for an on-call agent, because tickets are full of text that no tokenizer was trained on:</p>
+<table class="plain">
+  <thead><tr><th>Text</th><th>Bytes</th><th>Tokens in a production tokenizer</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>payment</code></td><td>7</td><td>1</td><td>A common word has earned its own token.</td></tr>
+    <tr><td><code>INC0010450</code></td><td>10</td><td>4</td><td>An identifier is rare, so it is spelled from fragments such as "INC", "001", "045", "0".</td></tr>
+    <tr><td><code>ERR_CONN_RESET</code></td><td>14</td><td>3</td><td>It splits at the underscores into "ERR", "_CONN" and "_RESET"; the model has to treat three pieces as one name.</td></tr>
+  </tbody>
+</table>
+
+<p>Two consequences you will meet again in the retrieval sessions:</p>
+<ul>
+  <li>A model compares incident numbers and error codes less reliably than it compares ordinary words. Exact identifiers are better matched with plain keyword search than by meaning.</li>
+  <li>The tokenizer trained on your own incidents learns your vocabulary. In the experiments you will see it give "supplier" or "checkout" a single token long before a general-purpose tokenizer would have, and still lose to it on ordinary English.</li>
+</ul>
+
+<p>Production tokenizers add refinements to what you are about to write: they split text into words and punctuation before merging so that merges never cross a word boundary, and they reserve special tokens for marking the start and end of messages. The core loop is the one you are about to build.</p>

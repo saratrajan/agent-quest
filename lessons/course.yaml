@@ -1,0 +1,28 @@
+- {number: 1, slug: tokenization, phase: Fundamentals, title: Tokenization,
+   summary: "How text becomes numbers. You write the byte-pair merge loop, then compare it with a production tokenizer."}
+- {number: 2, slug: next-token, phase: Fundamentals, title: Predicting the next token,
+   summary: "Tensors, embeddings, loss and the training loop, on the simplest possible model."}
+- {number: 3, slug: attention, phase: Fundamentals, title: Attention,
+   summary: "By hand on a 3×3 example, then a self-attention head with masking."}
+- {number: 4, slug: tiny-gpt, phase: Fundamentals, title: A tiny GPT,
+   summary: "Stack the blocks, train on the incident corpus on the Mac's GPU, and generate text."}
+- {number: 5, slug: toy-to-real, phase: Fundamentals, title: From toy to real,
+   summary: "Sampling settings and the context window, then the same ideas observed on a real local model."}
+- {number: 6, slug: baseline, phase: The agent, title: Baseline and measurement,
+   summary: "Tour the ticket store, triage with a prompt only, write the scoring and record baseline numbers."}
+- {number: 7, slug: embeddings, phase: The agent, title: Embeddings for search,
+   summary: "Embed the incidents, write similarity search by hand and measure retrieval quality."}
+- {number: 8, slug: rag, phase: The agent, title: RAG,
+   summary: "Adopt a vector database; chunking, keyword plus vector search and re-ranking, each change measured."}
+- {number: 9, slug: tool-calling, phase: The agent, title: Tool calling,
+   summary: "Write the tool loop by hand against a local model."}
+- {number: 10, slug: agent, phase: The agent, title: The agent,
+   summary: "Multi-step triage with structured output and a trace of every step."}
+- {number: 11, slug: guardrails, phase: The agent, title: Guardrails and failure,
+   summary: "Human approval, instructions hidden in ticket text, invented incident numbers and knowing when to abstain."}
+- {number: 12, slug: framework, phase: The agent, title: Framework port,
+   summary: "Rebuild the loop in LangGraph and compare it with your own."}
+- {number: 13, slug: fine-tuning, phase: The agent, title: Fine-tuning versus RAG,
+   summary: "LoRA on the incidents, measured against retrieval."}
+- {number: 14, slug: capstone, phase: The agent, title: Capstone,
+   summary: "Production readiness review: cost, latency, monitoring and rollout."}

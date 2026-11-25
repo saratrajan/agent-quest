@@ -1,0 +1,168 @@
+outcomes:
+  - "Explain why language models read sub-word tokens and not words or characters."
+  - "Write byte-pair encoding yourself: count pairs, merge, train, encode."
+  - "Predict how vocabulary size changes compression, and check it by experiment."
+  - "Say why identifiers such as incident numbers and error codes are hard for a model, and design around it."
+steps:
+- id: llm-overview
+  kind: video
+  section: Pre-work
+  title: Large language models, explained briefly
+  channel: 3Blue1Brown
+  youtube_id: LPZh9BOjkQs
+  start: 0
+  end: 478
+  watch_for:
+  - 'The model''s one job: given the text so far, produce a probability for every possible next piece of text.'
+  - What training actually changes (the parameters) and why the scale of that is hard to picture.
+  - The names attention and feed-forward. You don't need the detail yet; sessions 3 and 4 build both.
+- id: tokenizer-intro
+  kind: video
+  section: Pre-work
+  title: Let's build the GPT tokenizer, up to the algorithm walkthrough
+  channel: Andrej Karpathy
+  youtube_id: zduSFxRajkE
+  start: 0
+  end: 1622
+  watch_for:
+  - Which odd model behaviours (spelling, arithmetic, non-English text) he traces back to tokenization.
+  - Why UTF-8 bytes are the starting alphabet, and why using raw bytes alone makes sequences too long.
+  - In the walkthrough on the string aaabdaaabac, what gets merged in each round. The segment stops at 27:02, just before he writes the code, because you write that loop yourself in the session.
+- id: bpe-paper
+  kind: reading
+  section: Pre-work
+  title: Neural machine translation of rare words with subword units
+  source: Sennrich, Haddow and Birch, 2016 · arXiv:1508.07909
+  url: https://arxiv.org/abs/1508.07909
+  note: The paper that brought byte-pair encoding into language modelling. Read the abstract, then the section on byte-pair encoding with its short code listing. Ten minutes is enough; skip the translation experiments.
+- id: text-to-numbers
+  kind: concept
+  section: Session
+  title: Text has to become numbers
+  file: concept/01-text-to-numbers.html
+- id: byte-pair-encoding
+  kind: concept
+  section: Session
+  title: Byte-pair encoding, by hand
+  file: concept/02-byte-pair-encoding.html
+- id: ex-pair-counts
+  kind: exercise
+  section: Session
+  title: Count adjacent pairs
+  file: bpe.py
+  test: lessons/01-tokenization/test_bpe.py::test_pair_counts
+  brief: 'Write get_pair_counts: walk the sequence once and count each adjacent pair, keeping pairs in the order you first meet them.'
+- id: ex-merge
+  kind: exercise
+  section: Session
+  title: Merge one pair
+  file: bpe.py
+  test: lessons/01-tokenization/test_bpe.py::test_merge_non_overlapping
+  brief: 'Write merge: build a new list, replacing each occurrence of the pair with the new token. Scan left to right and never reuse an element in two merges.'
+- id: ex-train
+  kind: exercise
+  section: Session
+  title: The training loop
+  file: bpe.py
+  test: lessons/01-tokenization/test_bpe.py::test_train_textbook_example lessons/01-tokenization/test_bpe.py::test_train_stops_when_nothing_repeats
+  brief: 'Write train: start from the UTF-8 bytes, then repeat count, pick, merge until the vocabulary is full or no pair occurs twice. Use the two functions you just wrote.'
+- id: ex-encode
+  kind: exercise
+  section: Session
+  title: Encode new text
+  file: bpe.py
+  test: lessons/01-tokenization/test_bpe.py::test_encode_textbook_example lessons/01-tokenization/test_bpe.py::test_round_trip_unicode lessons/01-tokenization/test_bpe.py::test_empty_text lessons/01-tokenization/test_bpe.py::test_compresses_incident_text
+  brief: 'Write encode: turn the text into bytes, then replay every learned merge in order. With this done, decode(encode(x)) returns x for any text.'
+- id: tokens-in-practice
+  kind: concept
+  section: Session
+  title: Why tokens matter for an on-call agent
+  file: concept/03-tokens-in-practice.html
+- id: exp-vocab-size
+  kind: experiment
+  section: Session
+  title: Vocabulary size against compression
+  prompt: You will train on 60,000 bytes of incident text, first to a vocabulary of 300, then 1,000. Write down the compression ratio (bytes per token) you expect for each, and whether going from 300 to 1,000 will help more or less than going from 256 to 300 did.
+  command: python lessons/01-tokenization/compare.py --vocab 300   (then again with --vocab 1000)
+- id: exp-first-merges
+  kind: experiment
+  section: Session
+  title: What gets merged first
+  prompt: 'Before you look: which ten pairs do you think the algorithm merges first on incident tickets? Whole words, word endings, something else? Write your guesses, then compare.'
+  command: python lessons/01-tokenization/compare.py --show-merges 10
+- id: exp-identifiers
+  kind: experiment
+  section: Session
+  title: An incident number, token by token
+  prompt: How many tokens will INC0010450 take in your tokenizer trained on incident text, and how many in the production tokenizer cl100k_base? Which will be fewer, and why?
+  command: python lessons/01-tokenization/compare.py --text "INC0010450" --text "payment gateway timeout"
+- id: quirks-video
+  kind: video
+  section: Homework
+  title: Why tokenization explains odd model behaviour
+  channel: Andrej Karpathy
+  youtube_id: zduSFxRajkE
+  start: 6701
+  end: 7820
+  watch_for:
+  - Each odd behaviour he demonstrates and the tokenization reason behind it.
+  - Which of these would affect an agent that reads incident tickets full of identifiers and error codes.
+  - His closing recommendations on which tokenizer to use and when to train your own.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 4
+  title: Trace two merges by hand
+  prompt: Run byte-pair encoding by hand on the 14-character string "banana bandana" for two merges. Give each merge and the final token sequence, and say how the second merge is decided.
+  answer: 'Merge 1: "a"+"n" occurs 4 times, more than any other pair, and becomes token 256. The sequence is then b 256 256 a ␣ b 256 d 256 a. Merge 2: (b, 256) and (256, a) both occur twice; (b, 256) was seen first, so it wins the tie and "ban" becomes 257. Final sequence: 257 256 a ␣ 257 d 256 a, which is 8 tokens from 14 bytes.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: How many merges?
+  prompt: A tokenizer starts from bytes and has a vocabulary of 50,257. How many merges did training perform if 1 token is reserved as a special end-of-text marker? Show the sum.
+  answer: 50,257 − 256 byte tokens − 1 special token = 50,000 merges. This is GPT-2's tokenizer.
+- id: p3
+  kind: problem
+  section: Homework
+  points: 2
+  title: The cost of a longer prompt
+  prompt: Your agent sends the ticket (150 tokens), five retrieved past incidents (220 tokens each) and a runbook (400 tokens), and receives a 250-token answer. How many tokens in and out per triage? If you retrieve ten incidents where you had five, by what percentage does the input grow?
+  answer: 'Input: 150 + 5 × 220 + 400 = 1,650 tokens. Output: 250. With ten incidents the input is 150 + 2,200 + 400 = 2,750, an increase of 1,100 tokens or about 67%. Retrieval depth is the main lever on input cost.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: Why the tie-break matters
+  prompt: Your tokenizer and a colleague's are trained on the same text to the same vocabulary size but break ties differently. Can text encoded with yours be decoded with theirs? Explain in two sentences.
+  answer: No. A tie resolved differently assigns the same token number to a different byte string, and every later merge can differ too, so the two vocabularies disagree. A model must always be used with the exact tokenizer it was trained with.
+- id: q1
+  kind: review
+  section: Homework
+  title: Why sub-word tokens?
+  question: Why do language models use sub-word tokens and not whole words or single characters?
+  model_answer: Whole words need a huge vocabulary and still cannot represent unseen words such as new names, identifiers and typos. Characters or bytes can represent anything but make sequences several times longer, which wastes the context window and makes the model learn spelling. Sub-word tokens give common words one token and spell rare ones from pieces, so nothing is out of vocabulary and sequences stay short.
+- id: q2
+  kind: review
+  section: Homework
+  title: Tokens, cost and latency
+  question: How does tokenization affect the cost and latency of an agent in production?
+  model_answer: 'Hosted models bill per input and output token, and context limits are in tokens, so the tokenizer sets both the price and how much fits. Output is generated one token at a time, so answer length drives latency; input length mainly drives cost and time to first token. Practical levers: retrieve fewer and shorter passages, cap output length, and measure in tokens, since a 4-characters-per-token rule of thumb breaks down on code, identifiers and non-English text.'
+- id: q3
+  kind: review
+  section: Homework
+  title: Identifiers the tokenizer handles badly
+  question: What goes wrong when a model meets identifiers such as incident numbers or error codes, and how would you design around it?
+  model_answer: Rare strings are split into several arbitrary fragments, so the model compares and copies them less reliably and can produce a plausible but wrong identifier. Design around it by matching identifiers with exact keyword search alongside semantic search, passing identifiers through structured fields the code controls, and validating any identifier the model outputs against the system of record before acting on it.
+- id: q4
+  kind: review
+  section: Homework
+  title: Choosing a vocabulary size
+  question: How would you choose a vocabulary size if you were training a tokenizer for a new model?
+  model_answer: It is a trade-off. A larger vocabulary shortens sequences, which helps context and speed, but enlarges the embedding and output layers and leaves rare tokens with too few training examples each. A smaller one does the reverse. Compression improves with diminishing returns as the vocabulary grows, so in practice you plot tokens per byte against vocabulary size on representative text and pick near the knee, commonly 30,000 to 100,000 for general text.
+- id: q5
+  kind: review
+  section: Homework
+  title: Where tokenization bugs hide in a retrieval system
+  question: In a retrieval-augmented system, where do tokenization problems show up, and how would you detect them?
+  model_answer: 'Three places. Chunking: splitting by characters while limits are in tokens gives chunks that overflow or get truncated without warning. Mismatch: the embedding model and the generating model have different tokenizers and limits, so text that fits one is cut by the other. Budgeting: the prompt assembled from ticket, passages and instructions exceeds the window and the tail is dropped. Detect them by counting tokens with each model''s own tokenizer at every boundary, logging any truncation, and testing with the longest and most identifier-heavy documents you have.'

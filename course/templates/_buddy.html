@@ -1,0 +1,28 @@
+<div id="buddy" data-session="{{ buddy.session or '' }}">
+  <button id="buddy-open" class="buddy-launch" type="button" aria-expanded="false" aria-controls="buddy-panel">
+    <span class="buddy-face" aria-hidden="true"></span><span>Ask Buddy</span>
+  </button>
+  <section id="buddy-panel" class="buddy-panel" hidden aria-label="Buddy, your learning sidekick">
+    <header><span class="live" aria-hidden="true"></span><span><b>Buddy</b> · Your learning sidekick</span>
+      <button id="buddy-close" type="button" aria-label="Close Buddy">×</button></header>
+    <div class="buddy-stage" id="buddy-stage"><div id="buddy-pose" class="buddy-pose" data-pose="wave" role="img" aria-label="Buddy, a black and white dog with a blue collar"></div></div>
+    <div class="buddy-log" id="buddy-log" aria-live="polite">
+      <div class="bmsg from-buddy">Hey there! {{ buddy.greeting }}</div>
+      <div class="buddy-chips">{% for c in buddy.chips %}<button type="button" class="buddy-chip" {% if c.action %}data-action="{{ c.action }}"{% else %}data-ask="{{ c.ask }}"{% endif %}>{{ c.label }}</button>{% endfor %}</div>
+    </div>
+    <form id="buddy-form" autocomplete="off">
+      <label class="buddy-sr" for="buddy-input">Ask Buddy about the course</label>
+      <input id="buddy-input" maxlength="2000" placeholder="Ask Buddy about the course…">
+      <button type="submit" aria-label="Send">➜</button>
+    </form>
+    <p class="buddy-foot">Runs on this Mac. Knows only this course.</p>
+  </section>
+  {% if buddy.nudge %}
+  <aside id="buddy-nudge" class="buddy-nudge" aria-label="Quiz suggestion">
+    <div class="buddy-pose" data-pose="paw" aria-hidden="true"></div>
+    <div><b>Ready for a quick quiz?</b><span>Let's test what you've learned so far in this session.</span>
+      <button type="button" class="btn primary" data-action="quiz">Take the quiz →</button></div>
+    <button type="button" class="x" id="buddy-nudge-close" aria-label="Dismiss">×</button>
+  </aside>
+  {% endif %}
+</div>

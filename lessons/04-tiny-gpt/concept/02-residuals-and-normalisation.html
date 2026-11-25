@@ -1,0 +1,27 @@
+<p>Stacking blocks naively does not train. Each layer transforms its input, and after several layers the signal reaching the first one during backpropagation has been multiplied so many times that it has faded or blown up. Two devices fix this, and both appear in the three lines of <code>Block.forward</code> you are about to write.</p>
+
+<p><strong>Residual connections.</strong> A sub-layer does not replace its input; it adds a correction to it:</p>
+<p class="math">x ← x + attention(norm(x))   then   x ← x + feed_forward(norm(x))</p>
+<p>There is now a direct path from the output back to every layer, along which the gradient passes unchanged. If a sub-layer has nothing useful to add yet it can output zeros and the block passes its input straight through, which is why your test silences both sub-layers and checks that the block returns its input exactly.</p>
+
+<p><strong>Layer normalisation.</strong> Before each sub-layer, each position's vector is rescaled to have mean 0 and spread 1 (with a learned scale and shift). Whatever earlier layers did, every sub-layer sees inputs of a steady size.</p>
+
+<p>Now count the parameters of the small model your tests build: vocabulary 65, context 16, 2 blocks, 2 heads, width 32.</p>
+<table class="plain">
+  <thead><tr><th>Part</th><th>Sum</th><th>Parameters</th></tr></thead>
+  <tbody>
+    <tr><td>Token embeddings</td><td>65 × 32</td><td>2,080</td></tr>
+    <tr><td>Position embeddings</td><td>16 × 32</td><td>512</td></tr>
+    <tr><td>One block: 2 heads, each 3 projections of 32 × 16</td><td>2 × 3 × 512</td><td>3,072</td></tr>
+    <tr><td>One block: projection after the heads</td><td>32 × 32 + 32</td><td>1,056</td></tr>
+    <tr><td>One block: feed-forward</td><td>(32 × 128 + 128) + (128 × 32 + 32)</td><td>8,352</td></tr>
+    <tr><td>One block: two layer norms</td><td>2 × (32 + 32)</td><td>128</td></tr>
+    <tr><td>Two blocks</td><td>2 × 12,608</td><td>25,216</td></tr>
+    <tr><td>Final layer norm</td><td>32 + 32</td><td>64</td></tr>
+    <tr><td>Output layer</td><td>32 × 65 + 65</td><td>2,145</td></tr>
+    <tr><td><strong>Total</strong></td><td></td><td><strong>30,017</strong></td></tr>
+  </tbody>
+</table>
+<p>Most of the parameters sit in the feed-forward layers, not in attention. The model you will train in the experiments has the same shape at width 128 with 4 blocks: 827,981 parameters. Models in everyday use have billions, and the arithmetic is the same.</p>
+
+<p class="ref">Sources: He et al. (2015), <em>Deep Residual Learning for Image Recognition</em>, for residual connections; Ba, Kiros and Hinton (2016), <em>Layer Normalization</em>; Vaswani et al. (2017), section 3.1, for the block.</p>

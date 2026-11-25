@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Knowledge · Service Desk{% endblock %}
+{% block main %}
+<div class="pagehead"><h1>Knowledge: services and runbooks</h1></div>
+<div class="tablewrap card"><table class="list">
+  <thead><tr><th>Service</th><th>Tier</th><th>Owning team</th><th>Depends on</th><th>Runbooks</th></tr></thead>
+  <tbody>{% for s in services %}
+  <tr data-service="{{ s.id }}"><td><b>{{ s.name }}</b><br><span class="dim num">{{ s.id }}</span></td><td>{{ s.tier }}</td><td>{{ s.team }}</td>
+  <td>{{ s.depends_on | join(", ") or "Nothing" }}</td>
+  <td>{% for rb in books.get(s.id, []) %}<a href="/runbooks/{{ rb.id }}">{{ rb.title }}</a>{% if not loop.last %}<br>{% endif %}{% else %}<span class="dim">None</span>{% endfor %}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% endblock %}

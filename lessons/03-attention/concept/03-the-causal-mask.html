@@ -1,0 +1,20 @@
+<p>During training the model sees a whole window at once and predicts the next token at every position. Position 5's target is the token at position 6, and that token is sitting in the same window. If position 5 may attend to it, the model learns to copy the answer and nothing else.</p>
+
+<p>The <strong>causal mask</strong> forbids looking ahead. Before the softmax, the score for every later position is set to minus infinity, which the softmax turns into a weight of exactly zero:</p>
+<table class="plain">
+  <thead><tr><th></th><th>sees 1</th><th>sees 2</th><th>sees 3</th></tr></thead>
+  <tbody>
+    <tr><td>Position 1</td><td>yes</td><td>no</td><td>no</td></tr>
+    <tr><td>Position 2</td><td>yes</td><td>yes</td><td>no</td></tr>
+    <tr><td>Position 3</td><td>yes</td><td>yes</td><td>yes</td></tr>
+  </tbody>
+</table>
+<p>With the mask on, the weights for position 2 in the worked example are recomputed over positions 1 and 2 only and still sum to 1. The mask must go in before the softmax; zeroing weights afterwards would leave rows that no longer sum to 1.</p>
+
+<p>The mask is also what makes generation match training. When the model writes text there is no future to look at, so a model trained without the mask is useless the moment you ask it to generate. The third experiment shows this: its training loss falls to almost nothing, and what it writes is nonsense.</p>
+
+<p>Two properties of attention worth stating plainly, because they shape everything built on it:</p>
+<ul>
+  <li><strong>It has no sense of order.</strong> Attention compares content. Shuffle the earlier tokens and the weights follow the tokens, not the positions. The model learns order only because a position vector is added to each token vector, which you will do in session 4.</li>
+  <li><strong>Its cost grows with the square of the length.</strong> Every position scores every earlier position, so <em>T</em> tokens need about <em>T</em>² scores per head. Doubling the context quadruples that work. This is the root of why context windows are limited and why long prompts are slow and costly.</li>
+</ul>

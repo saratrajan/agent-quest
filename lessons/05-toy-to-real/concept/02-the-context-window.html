@@ -1,0 +1,20 @@
+<p>Your GPT has a context of 128 characters because its position table has 128 rows and <code>generate</code> keeps only the last 128 tokens. Everything earlier is gone: the model cannot recall it, however important it was. Every language model has this limit. The only thing that changes is the number.</p>
+
+<p>The window is a budget, counted in tokens, shared by everything in one request:</p>
+<table class="plain">
+  <thead><tr><th>Goes into the window</th><th>For a triage agent</th></tr></thead>
+  <tbody>
+    <tr><td>Instructions</td><td>what triage means here, the output format</td></tr>
+    <tr><td>The task</td><td>the new incident's summary and description</td></tr>
+    <tr><td>Supplied knowledge</td><td>past incidents, runbook steps, service details</td></tr>
+    <tr><td>The model's own output</td><td>its reasoning and its answer</td></tr>
+  </tbody>
+</table>
+
+<p>Two things about the window are easy to get wrong.</p>
+<ul>
+  <li><strong>The configured window is often far smaller than the model's maximum.</strong> The model on this Mac supports 262,144 tokens, but the software running it uses a much smaller default, because memory and time grow with the window. A prompt longer than the configured window is cut, and nothing warns you. In the second experiment you will watch a fact at the start of a long prompt vanish for exactly this reason.</li>
+  <li><strong>A larger window is not free.</strong> Session 3 showed that attention's work grows with the square of the length. Long prompts are slower to start answering, cost more, and can dilute the passage that matters among ones that do not.</li>
+</ul>
+
+<p>This is the reason retrieval exists. An agent cannot be handed all 400 past incidents on every request, and should not be. From session 7 you build the step that chooses the handful worth the space.</p>

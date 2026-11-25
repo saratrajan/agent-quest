@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Results · Agent Quest{% endblock %}
+{% block main %}
+<section style="display:flex;flex-direction:column;gap:var(--space-4)">
+  <span class="eyebrow">Measured on the 100 held-back incidents</span>
+  <h1>Results board</h1>
+  {% if not runs %}
+  <div class="empty"><h3>No runs yet</h3><p>From session 6 you score the agent on incidents it has never seen. Each setup you try (model alone, with retrieval, with tools, fine-tuned) adds a row here.</p></div>
+  {% else %}
+  <table class="results"><thead><tr><th>Setup</th><th>Priority, exact</th><th>Priority, within one</th><th>Service</th><th>Related in top 5</th><th>Seconds per incident</th></tr></thead>
+  <tbody>{% for r in runs %}<tr><td>{{ r.name }}</td><td>{{ r.priority_exact }}</td><td>{{ r.priority_within_one }}</td><td>{{ r.service }}</td><td>{{ r.hit_at_5 }}</td><td>{{ r.seconds }}</td></tr>{% endfor %}</tbody></table>
+  {% endif %}
+</section>
+{% endblock %}

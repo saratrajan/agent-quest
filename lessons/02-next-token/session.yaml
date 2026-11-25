@@ -1,0 +1,168 @@
+outcomes:
+- Explain what logits, softmax and cross-entropy loss are, and compute a loss by hand.
+- Write the training loop that every neural network uses, from a bigram table to a large model.
+- 'Read a loss number: compare it with a uniform guess and say whether a model is learning.'
+- Say what a one-token context can and cannot learn, and why attention is needed next.
+steps:
+- id: gradient-descent
+  kind: video
+  section: Pre-work
+  title: Gradient descent, how neural networks learn
+  channel: 3Blue1Brown
+  youtube_id: IHZwWFHWa-w
+  start: 0
+  end: 1058
+  watch_for:
+  - 'The cost function: one number that says how wrong the whole network is.'
+  - The gradient as the direction of steepest increase, and why you step the other way.
+  - That learning means nudging every weight a little, many times. You will write that loop today.
+- id: gpt-data-loading
+  kind: video
+  section: Pre-work
+  title: 'Let''s build GPT: data, tokens and batches'
+  channel: Andrej Karpathy
+  youtube_id: kCc8FmEb1nY
+  start: 0
+  end: 1331
+  watch_for:
+  - How the text becomes one long tensor of token numbers, split into training and validation parts.
+  - What a block and a batch are, and why the targets are the inputs shifted by one.
+  - The segment stops at 22:11, just before he builds the bigram model, because you build it yourself in the session.
+- id: bengio-2003
+  kind: reading
+  section: Pre-work
+  title: A neural probabilistic language model
+  source: Bengio, Ducharme, Vincent and Jauvin, 2003 · Journal of Machine Learning Research
+  url: https://www.jmlr.org/papers/v3/bengio03a.html
+  note: The paper that introduced learning a vector for each word together with the model that predicts the next word. Read section 1 for the idea (fighting the curse of dimensionality with learned word features) and look at figure 1. Skip the experiments.
+- id: tokens-to-scores
+  kind: concept
+  section: Session
+  title: From tokens to scores
+  file: concept/01-tokens-to-scores.html
+- id: scores-to-loss
+  kind: concept
+  section: Session
+  title: From scores to a loss, by hand
+  file: concept/02-scores-to-loss.html
+- id: ex-cross-entropy
+  kind: exercise
+  section: Session
+  title: Cross-entropy in plain Python
+  file: bigram.py
+  test: lessons/02-next-token/test_bigram.py::test_cross_entropy_by_hand_on_the_lesson_example lessons/02-next-token/test_bigram.py::test_cross_entropy_by_hand_matches_pytorch_and_survives_large_scores
+  brief: 'Write cross_entropy_by_hand: softmax the scores, then return minus the log of the probability given to the target. Subtract the largest score first so large numbers do not overflow.'
+- id: ex-get-batch
+  kind: exercise
+  section: Session
+  title: Batches of inputs and targets
+  file: bigram.py
+  test: lessons/02-next-token/test_bigram.py::test_get_batch_targets_are_inputs_shifted_by_one
+  brief: 'Write get_batch: choose random start positions, cut a window of block_size tokens at each for x, and the window one place to the right for y.'
+- id: ex-forward
+  kind: exercise
+  section: Session
+  title: The bigram model's forward pass
+  file: bigram.py
+  test: lessons/02-next-token/test_bigram.py::test_forward_shapes_and_no_loss_without_targets lessons/02-next-token/test_bigram.py::test_untrained_loss_is_close_to_a_uniform_guess
+  brief: 'Write BigramModel.forward: look the tokens up in the table to get logits; when targets are given, flatten both and compute the cross-entropy loss.'
+- id: the-training-loop
+  kind: concept
+  section: Session
+  title: How the model corrects itself
+  file: concept/03-the-training-loop.html
+- id: ex-train-step
+  kind: exercise
+  section: Session
+  title: One step of training
+  file: bigram.py
+  test: lessons/02-next-token/test_bigram.py::test_training_learns_a_simple_pattern lessons/02-next-token/test_bigram.py::test_generate_continues_the_pattern_after_training
+  brief: 'Write train_step: clear the gradients, run the model to get the loss, call backward, step the optimizer, and return the loss as a float.'
+- id: exp-learning-rate
+  kind: experiment
+  section: Session
+  title: Three learning rates
+  prompt: You will train the bigram model on the incident threads for 2,000 steps at learning rates 0.001, 0.01 and 0.1. The loss starts near 4.8 and a uniform guess scores 4.34. Predict the final loss for each, and which one will look noisiest.
+  command: python lessons/02-next-token/train.py --lr 0.001 --sample 0   (then --lr 0.01, then --lr 0.1)
+- id: exp-sample
+  kind: experiment
+  section: Session
+  title: What a bigram model writes
+  prompt: 'After training, the model generates 300 characters. Before you look: will you see real words? Real incident numbers? Anything that looks like a timestamp? Say what you expect it to get right and wrong, and why.'
+  command: python lessons/02-next-token/train.py
+- id: exp-row
+  kind: experiment
+  section: Session
+  title: Read one row of the table
+  prompt: Which characters do you expect to be most likely after a capital P in incident threads? Write your top three, then print the trained row.
+  command: python lessons/02-next-token/train.py --show-row P --sample 0
+- id: bigram-video
+  kind: video
+  section: Homework
+  title: The bigram model, built and trained
+  channel: Andrej Karpathy
+  youtube_id: kCc8FmEb1nY
+  start: 1331
+  end: 2533
+  watch_for:
+  - Where his code and yours differ, and whether the difference matters.
+  - His explanation of why the starting loss is higher than the uniform guess.
+  - How he moves the code into a script with a separate loss estimate for validation data. You will write that in session 4.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: Two losses by hand
+  prompt: (a) Three tokens all have score 1.0. What is the loss, whichever is the target? (b) Our 77-character model would score 4.344 with a uniform guess, yet untrained it scores about 4.8. Why is an untrained model worse than a uniform guess?
+  answer: (a) Equal scores give probability 1/3 each, so the loss is log 3 = 1.099. (b) The table starts as random numbers, not zeros, so the untrained model is confidently wrong about some tokens. Confident wrong answers cost more than an even spread, which is why the loss sits above log 77 = 4.344 until training pulls it down.
+- id: p2
+  kind: problem
+  section: Homework
+  points: 3
+  title: One gradient by hand
+  prompt: 'For scores [2.0, 1.0, 0.1] with the first token as the target, compute the gradient of the loss with respect to each score by hand. Then check it against PyTorch with: python lessons/02-next-token/train.py --gradcheck'
+  answer: 'The probabilities are [0.659, 0.242, 0.099]. The gradient is the probability, minus 1 for the target: [0.659 − 1, 0.242, 0.099] = [−0.341, 0.242, 0.099]. The check prints the same three numbers from PyTorch. Stepping against the gradient raises the correct score and lowers the other two.'
+- id: p3
+  kind: problem
+  section: Homework
+  points: 2
+  title: Shapes in one training step
+  prompt: With a vocabulary of 77, a block size of 8 and a batch size of 32, give the shape of x, of y and of the logits, and say how many separate predictions are scored in one step.
+  answer: x is (32, 8), y is (32, 8), logits are (32, 8, 77). Every position in every window is one prediction, so a step scores 32 × 8 = 256 predictions and the loss is their average.
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: Why the table cannot scale
+  prompt: The bigram table has vocabulary × vocabulary numbers. How many is that for our 77 characters, and for a tokenizer with 50,000 tokens? What does this suggest the next design must change?
+  answer: 77 × 77 = 5,929 numbers, against 50,000 × 50,000 = 2.5 billion, almost all for pairs that never occur. The fix is to give each token a short learned vector (say 128 numbers) and compute the scores from that vector with shared layers, so the size grows with the vocabulary once, not squared.
+- id: q1
+  kind: review
+  section: Homework
+  title: Reading a loss
+  question: A colleague reports a validation loss of 2.3 on a character-level model. How do you judge whether that is good?
+  model_answer: 'Compare it with reference points. A uniform guess over the vocabulary scores log V, so 4.34 for 77 characters; 2.3 is well below that. Turn it into perplexity, e to the loss: about 10, meaning the model is as uncertain as choosing among 10 equally likely characters. Then compare with a baseline on the same data and tokenizer, because a loss is only comparable across models that predict the same units. Finally check the gap to the training loss for overfitting.'
+- id: q2
+  kind: review
+  section: Homework
+  title: Why this loss
+  question: Why are language models trained with cross-entropy and not with accuracy?
+  model_answer: Accuracy only asks whether the top guess was right, so it is flat almost everywhere and gives no gradient to follow. Cross-entropy rewards putting more probability on the right token even when it is not yet the top guess, so every prediction contributes a useful gradient. It also punishes confident wrong answers heavily, which pushes the model towards honest probabilities, and those probabilities are what sampling uses at generation time.
+- id: q3
+  kind: review
+  section: Homework
+  title: Diagnosing a learning rate
+  question: What do a learning rate that is too high and one that is too low each look like, and what do you do?
+  model_answer: 'Too high: the loss is noisy, plateaus high, oscillates or rises, sometimes to NaN. Too low: the loss falls smoothly but so slowly that the budget runs out before it flattens. Sweep rates a factor of 3 to 10 apart on a short run and pick the largest that trains stably. In larger models use a warm-up and a decay schedule, and an adaptive optimizer such as AdamW, which makes the choice less sensitive.'
+- id: q4
+  kind: review
+  section: Homework
+  title: What an embedding is
+  question: Explain what an embedding is to an engineer who has not met the term.
+  model_answer: It is a lookup table with one learned row of numbers per token. The model cannot do arithmetic on the token itself, so it swaps each token for its row. The rows start random and are adjusted by training like any other weights, so tokens used in similar ways end up with similar rows. Later sessions reuse the same idea to compare whole incidents by meaning.
+- id: q5
+  kind: review
+  section: Homework
+  title: The limit of one token of context
+  question: What can a bigram model learn about incident tickets, and what is beyond it? Why does that matter for what we build next?
+  model_answer: 'It learns which token tends to follow which: that P is followed by a digit, that q is followed by u. It cannot use anything earlier, so it cannot know that a ticket about payment timeouts should lead to a particular service or priority. Useful prediction needs each position to draw on the relevant earlier tokens, however far back. Attention, in the next session, is the mechanism that lets a position choose what to look at.'

@@ -1,0 +1,26 @@
+# Two separate applications. They share no code; the course app only links
+# to the service desk, and the triage agent reaches the desk over HTTP.
+#
+#   Service desk  http://localhost:8080   incident management tool
+#   Course app    http://localhost:8000   lessons and progress
+services:
+  servicedesk:
+    build:
+      context: .
+      dockerfile: docker/servicedesk.Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./data:/app/data
+
+  course:
+    build:
+      context: .
+      dockerfile: docker/course.Dockerfile
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      SERVICE_DESK_URL: http://localhost:8080
+    volumes:
+      - ./data:/app/data
+      - ./lessons:/app/lessons

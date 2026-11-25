@@ -1,0 +1,168 @@
+outcomes:
+- Explain attention as a weighted average whose weights are computed from content, and work one out by hand.
+- Write scaled dot-product attention and a causal attention head.
+- Say why the scores are divided by the square root of the dimension, and why the mask goes before the softmax.
+- 'State the two limits that follow from attention: no built-in sense of order, and cost that grows with the square of the context.'
+steps:
+- id: attention-visual
+  kind: video
+  section: Pre-work
+  title: Attention in transformers, step by step
+  channel: 3Blue1Brown
+  youtube_id: eMlx5fFNoYc
+  start: 0
+  end: 1339
+  watch_for:
+  - 'The attention pattern: a grid of how much each word draws on each earlier word.'
+  - What queries, keys and values each do, in his adjective-and-noun example.
+  - 'Masking: why later words must not influence earlier ones during training.'
+- id: gpt-averaging-trick
+  kind: video
+  section: Pre-work
+  title: 'Let''s build GPT: averaging the past with a matrix multiply'
+  channel: Andrej Karpathy
+  youtube_id: kCc8FmEb1nY
+  start: 2533
+  end: 3720
+  watch_for:
+  - 'The weakest form of context: each position takes the plain average of everything before it.'
+  - How a lower-triangular matrix does that averaging in one multiply, and how softmax turns it into learnable weights.
+  - The segment stops at 1:02:00, where he writes self-attention itself. You write that in the session.
+- id: attention-paper
+  kind: reading
+  section: Pre-work
+  title: Attention is all you need
+  source: Vaswani et al., 2017 · arXiv:1706.03762
+  url: https://arxiv.org/abs/1706.03762
+  note: The paper that introduced the transformer. Read section 3.2.1, scaled dot-product attention, including the footnote on why the scores are scaled, and look at figure 2. Leave the rest for session 4.
+- id: why-look-back
+  kind: concept
+  section: Session
+  title: Why one token of context is not enough
+  file: concept/01-why-look-back.html
+- id: queries-keys-values
+  kind: concept
+  section: Session
+  title: Queries, keys and values, by hand
+  file: concept/02-queries-keys-values.html
+- id: ex-by-hand
+  kind: exercise
+  section: Session
+  title: Attention in plain Python
+  file: attention.py
+  test: lessons/03-attention/test_attention.py::test_attention_by_hand_on_the_lesson_example lessons/03-attention/test_attention.py::test_attention_by_hand_weights_always_sum_to_one
+  brief: 'Write attention_by_hand for one query: scaled dot-product scores, softmax to weights, then the weighted sum of the values.'
+- id: the-causal-mask
+  kind: concept
+  section: Session
+  title: 'No looking ahead: the causal mask'
+  file: concept/03-the-causal-mask.html
+- id: ex-mask
+  kind: exercise
+  section: Session
+  title: The causal mask
+  file: attention.py
+  test: lessons/03-attention/test_attention.py::test_causal_mask_lets_each_position_see_itself_and_the_past
+  brief: 'Write causal_mask: a lower-triangular matrix of True values, one line with torch.tril.'
+- id: ex-scaled-dot-product
+  kind: exercise
+  section: Session
+  title: Attention for every position at once
+  file: attention.py
+  test: lessons/03-attention/test_attention.py::test_scaled_dot_product_matches_the_hand_example lessons/03-attention/test_attention.py::test_mask_removes_the_future_exactly lessons/03-attention/test_attention.py::test_scaled_dot_product_handles_batches
+  brief: 'Write scaled_dot_product with tensors: scores from a matrix multiply, divided by the square root of the dimension, masked with minus infinity where the mask is False, then softmax and a second multiply with the values.'
+- id: ex-head
+  kind: exercise
+  section: Session
+  title: An attention head
+  file: attention.py
+  test: lessons/03-attention/test_attention.py::test_head_output_shape lessons/03-attention/test_attention.py::test_head_cannot_see_the_future
+  brief: 'Write Head.forward: project x into queries, keys and values and pass them to your function with the causal mask cut to the current length.'
+- id: exp-scaling
+  kind: experiment
+  section: Session
+  title: What the scaling prevents
+  prompt: For random vectors of dimension 4, 64 and 512, the script reports the largest attention weight in a row of 16 tokens, with and without dividing by the square root of the dimension. An even spread would be 0.06. Predict the six numbers roughly, and say at which dimension the unscaled version becomes a problem.
+  command: python lessons/03-attention/explore.py --scaling
+- id: exp-pattern
+  kind: experiment
+  section: Session
+  title: Where a trained head looks
+  prompt: The script trains one attention head on the incident threads for 1,500 steps, then shows where the final g of "Card payments failing" looks. Predict which characters get the most weight. Will it reach back to "payments"? Also predict the loss against the bigram model's 2.3 to 2.4.
+  command: python lessons/03-attention/explore.py --pattern "Card payments failing"
+- id: exp-no-mask
+  kind: experiment
+  section: Session
+  title: Training without the mask
+  prompt: The same model is trained twice, with and without the causal mask. Predict the final training loss of each, and what each writes when asked to generate 80 characters.
+  command: python lessons/03-attention/explore.py --no-mask
+- id: self-attention-video
+  kind: video
+  section: Homework
+  title: Self-attention, and six notes about it
+  channel: Andrej Karpathy
+  youtube_id: kCc8FmEb1nY
+  start: 3720
+  end: 4751
+  watch_for:
+  - His version of the head you just wrote, and where it differs from yours.
+  - 'Note 2: attention has no notion of space, which is why positions must be added.'
+  - 'Note 6: his demonstration of why the scores are scaled, to compare with your first experiment.'
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: A masked row by hand
+  prompt: In the lesson's example, position 2 has query [0, 1]. With the causal mask on, it can see positions 1 and 2, whose keys are [1, 0] and [0, 1]. Compute its two attention weights by hand.
+  answer: 'Scores: [0, 1] · [1, 0] = 0 and [0, 1] · [0, 1] = 1. Divided by √2: 0 and 0.707. Exponentials: 1.000 and 2.028, total 3.028. Weights: 0.330 and 0.670, and position 3 gets exactly 0. Switch the mask on in the diagram to confirm.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: Counting a head's parameters
+  prompt: A head takes vectors of 32 numbers and has a head size of 16. Its three projections have no bias. How many parameters does it have? How many of them does the causal mask add?
+  answer: 'Each projection is a 32 × 16 matrix, 512 numbers, and there are three: 1,536 parameters. The mask adds none. It is a fixed pattern, not something learned.'
+- id: p3
+  kind: problem
+  section: Homework
+  points: 3
+  title: The cost of a longer context
+  prompt: One head scores every position against every position it can see. Roughly how many scores is that for a context of 128 tokens, and for 8,192? By what factor does the work grow when the context grows 64 times?
+  answer: 'About T² scores: 128² = 16,384 and 8,192² = 67,108,864 (half of each with the mask, which does not change the growth). The context grew 64 times and the work grew 64² = 4,096 times. This is per head and per layer, which is why filling a large context window is slow and expensive.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: Order
+  prompt: You feed a head the tokens A B C, then C B A, with no position information added. Ignoring the mask, how do the attention weights for token A compare between the two? What does that tell you the model needs?
+  answer: 'They are the same weights attached to the same tokens: A gives B and C exactly the weight it gave them before. Attention compares content and knows nothing about where a token sits. To use word order, the model needs a position vector added to each token vector before attention, which session 4 adds.'
+- id: q1
+  kind: review
+  section: Homework
+  title: Attention in plain words
+  question: Explain self-attention to an experienced engineer who has never studied machine learning.
+  model_answer: 'Each token starts as a vector. To update a token, the model takes a weighted average of the vectors of the tokens before it. The weights are not fixed: each token produces a query describing what it wants and a key describing what it offers, and the weight between two tokens is how well one''s query matches the other''s key. So every token pulls in information from the earlier tokens most relevant to it. The projections that produce queries, keys and values are learned, so the model works out for itself what is worth looking at.'
+- id: q2
+  kind: review
+  section: Homework
+  title: The causal mask
+  question: Why does a model that generates text need a causal mask in training, and what happens without it?
+  model_answer: 'In training the whole sequence is present and every position predicts its next token, which is sitting one place to the right. Without a mask the model simply attends to that token and copies it: the training loss collapses towards zero while it learns nothing about language. At generation time there is no future token to copy and the output is garbage. The mask sets the scores for later positions to minus infinity before the softmax, so training matches the conditions of generation.'
+- id: q3
+  kind: review
+  section: Homework
+  title: Why three projections
+  question: Why does attention use separate queries, keys and values, and not just compare the token vectors directly?
+  model_answer: 'Comparing raw vectors would make a token attend mostly to tokens similar to itself, which is rarely what is needed: a verb wants its subject, not other verbs. Separate query and key projections let what I am looking for differ from what I am. The value projection separates what a token is found by from what it hands over. All three are learned, and different heads learn different projections, so one head can track one kind of relationship and another head a different one.'
+- id: q4
+  kind: review
+  section: Homework
+  title: Context length and cost
+  question: Your agent's prompt has grown from 2,000 to 16,000 tokens because it now includes many past incidents. What happens to latency and cost, and what would you do about it?
+  model_answer: Attention work grows with the square of the length, so the model's computation over the prompt grows far more than 8 times, and time to first token rises noticeably; billed cost rises with the token count, 8 times. Quality can also fall, since relevant passages compete with irrelevant ones. I would retrieve fewer and better passages, rank them and keep only the top few, shorten each to the part that matters, cache the fixed part of the prompt where the provider supports it, and measure answer quality against prompt size to find where more context stops helping.
+- id: q5
+  kind: review
+  section: Homework
+  title: Attention weights as an explanation
+  question: A colleague wants to show attention weights to on-call engineers as the reason for the agent's triage decision. What is your view?
+  model_answer: I would not present them as the reason. A real model has many heads over many layers, each mixing information that was already mixed below, so one head's weights on the input tokens do not show what drove the output, and studies have found that different weight patterns can give the same prediction. For an explanation people can check, have the agent cite the specific past incidents and runbook steps it used and record its tool calls in a trace. That evidence can be verified against the source; attention weights cannot.

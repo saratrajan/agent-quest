@@ -1,0 +1,168 @@
+outcomes:
+- 'Assemble a GPT from parts you understand: embeddings, multi-head attention, feed-forward layers, residual connections and normalisation.'
+- Count a transformer's parameters by hand and say where most of them are.
+- Train a model on the incident threads and read its training and validation loss.
+- Explain why a loss only means something next to a baseline and a description of the data.
+steps:
+- id: transformers-visual
+  kind: video
+  section: Pre-work
+  title: Transformers, the tech behind LLMs
+  channel: 3Blue1Brown
+  youtube_id: wjZofJX0v4M
+  start: 0
+  end: 1342
+  watch_for:
+  - 'The overall flow: embed, alternate attention and feed-forward layers many times, then turn the last vector into scores.'
+  - How much of the model is just large matrices of learned numbers, and how they are counted.
+  - Embedding and unembedding as the two ends of the model. You wire both up today.
+- id: gpt-big-picture
+  kind: video
+  section: Pre-work
+  title: 'Let''s build GPT: decoder-only models and where ChatGPT fits'
+  channel: Andrej Karpathy
+  youtube_id: kCc8FmEb1nY
+  start: 6159
+  end: 6872
+  watch_for:
+  - Why a GPT is a decoder-only transformer, and what the encoder was for.
+  - The difference between pre-training on raw text, which you do today, and fine-tuning into an assistant.
+  - How small today's model is next to the ones in everyday use.
+- id: resnet-paper
+  kind: reading
+  section: Pre-work
+  title: Deep residual learning for image recognition
+  source: He, Zhang, Ren and Sun, 2015 · arXiv:1512.03385
+  url: https://arxiv.org/abs/1512.03385
+  note: 'An image paper, read here for one idea that every transformer uses. Read the introduction and section 3.1, and study figure 2: a layer that learns a correction to its input instead of a replacement. That is the x + f(x) you write in Block.forward.'
+- id: heads-and-feed-forward
+  kind: concept
+  section: Session
+  title: Many heads, then a feed-forward layer
+  file: concept/01-heads-and-feed-forward.html
+- id: ex-multi-head
+  kind: exercise
+  section: Session
+  title: Heads side by side
+  file: gpt.py
+  test: lessons/04-tiny-gpt/test_gpt.py::test_multi_head_joins_the_heads_back_to_full_width
+  brief: 'Write MultiHead.forward: run every head on the input, concatenate their outputs along the last dimension, and apply the projection.'
+- id: residuals-and-normalisation
+  kind: concept
+  section: Session
+  title: Residual connections, normalisation and a parameter count
+  file: concept/02-residuals-and-normalisation.html
+- id: ex-block
+  kind: exercise
+  section: Session
+  title: The transformer block
+  file: gpt.py
+  test: lessons/04-tiny-gpt/test_gpt.py::test_block_keeps_the_shape_and_adds_to_its_input
+  brief: 'Write Block.forward: two residual steps, each normalising first, then adding the sub-layer''s output to x.'
+- id: ex-gpt
+  kind: exercise
+  section: Session
+  title: The whole model
+  file: gpt.py
+  test: lessons/04-tiny-gpt/test_gpt.py::test_gpt_shapes_and_loss lessons/04-tiny-gpt/test_gpt.py::test_gpt_parameter_count_matches_the_lesson lessons/04-tiny-gpt/test_gpt.py::test_gpt_rejects_input_longer_than_its_window lessons/04-tiny-gpt/test_gpt.py::test_gpt_cannot_see_the_future lessons/04-tiny-gpt/test_gpt.py::test_position_matters lessons/04-tiny-gpt/test_gpt.py::test_gpt_can_memorise_one_batch
+  brief: 'Write GPT.forward: reject input longer than the context window, add token and position embeddings, run the blocks, the final normalisation and the output layer, and compute the loss when targets are given.'
+- id: reading-a-loss-curve
+  kind: concept
+  section: Session
+  title: Training and validation loss
+  file: concept/03-reading-a-loss-curve.html
+- id: ex-estimate-loss
+  kind: exercise
+  section: Session
+  title: Measuring the loss honestly
+  file: gpt.py
+  test: lessons/04-tiny-gpt/test_gpt.py::test_estimate_loss_measures_without_disturbing_the_model
+  brief: 'Write estimate_loss: switch the model to evaluation mode, average the loss over several batches, and put the model back in the mode you found it in.'
+- id: exp-base-run
+  kind: experiment
+  section: Session
+  title: Train your GPT
+  prompt: 'You will train 4 blocks of width 128 on the incident threads for 2,000 steps; it takes about a minute. One attention head reached a loss of 2.2. Predict the final validation loss, the gap between training and validation loss, and what the 400 generated characters will get right: words? timestamps? a whole work note?'
+  command: python lessons/04-tiny-gpt/train.py
+- id: exp-smaller
+  kind: experiment
+  section: Session
+  title: Take things away
+  prompt: 'Two more runs: one with a single block, one with a context of 32 characters in place of 128. Predict each one''s validation loss against your base run, and which loss costs more: depth or context. Then press Refresh on the chart.'
+  command: python lessons/04-tiny-gpt/train.py --layers 1 --name one-layer --sample 0   (then --block 32 --name short-context --sample 0)
+- id: exp-bpe
+  kind: experiment
+  section: Session
+  title: Your own tokenizer
+  prompt: 'This run feeds the model tokens from the byte-pair tokenizer you wrote in session 1, at a vocabulary of 512. The first time, it spends about two minutes building the tokenizer. Predict its starting loss (hint: what is log 512?), and whether its final loss can be compared directly with the character run.'
+  command: python lessons/04-tiny-gpt/train.py --tokens bpe --name bpe-512
+- id: gpt-block-video
+  kind: video
+  section: Homework
+  title: Building the block and scaling up
+  channel: Andrej Karpathy
+  youtube_id: kCc8FmEb1nY
+  start: 4751
+  end: 6159
+  watch_for:
+  - His multi-head, feed-forward and residual code beside yours.
+  - The effect on his loss of each addition, compared with what you measured.
+  - 'Dropout, which he adds and this lesson leaves out: what it is for and when you would want it.'
+- id: p1
+  kind: problem
+  section: Homework
+  points: 4
+  title: Count the parameters yourself
+  prompt: Without looking back at the lesson's table, count the parameters of a model with vocabulary 65, context 16, 2 blocks, 2 heads and width 32. Heads have no bias; every other linear layer does; a layer norm has a scale and a shift per number. Then say which kind of layer holds the most.
+  answer: 'Embeddings: 65 × 32 + 16 × 32 = 2,592. One block: heads 2 × 3 × (32 × 16) = 3,072; projection 32 × 32 + 32 = 1,056; feed-forward (32 × 128 + 128) + (128 × 32 + 32) = 8,352; two layer norms 128; total 12,608, so 25,216 for two blocks. Final layer norm 64. Output layer 32 × 65 + 65 = 2,145. Total 30,017. The feed-forward layers hold the most: 16,704, more than half.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: The residual path
+  prompt: If both sub-layers in a block output all zeros, what does the block return? Why is that property useful at the start of training a deep stack?
+  answer: It returns its input unchanged, because each step is x plus the sub-layer's output. A newly initialised deep model therefore behaves close to a shallow one, and gradients reach every layer along the addition path without being scaled down. Each block can then learn to add a useful correction, instead of every layer having to be right before any signal gets through.
+- id: p3
+  kind: problem
+  section: Homework
+  points: 2
+  title: Depth against parameters
+  prompt: On this Mac the base model (4 blocks, 827,981 parameters) reached a validation loss of 0.36 and the one-block model (234,317 parameters) reached 0.70. Convert both to perplexity, e to the power of the loss, and say what the numbers mean.
+  answer: 'e^0.36 = 1.43 and e^0.70 = 2.01. Perplexity is the number of equally likely choices the model is effectively hesitating between at each character: about 1.4 for the deeper model against 2 for the shallow one. On this data the three extra blocks, about 3.5 times the parameters, halve the loss.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: Comparing across tokenizers
+  prompt: The byte-pair run reached a validation loss of 0.525 per token; the character run reached 0.36 per character. The byte-pair corpus had 306,280 training tokens for the same text that is 656,785 characters. Which model predicts the text better?
+  answer: Losses per token cannot be compared when the tokens differ, so convert to the same unit. Each byte-pair token covers 656,785 ÷ 306,280 = 2.14 characters, so 0.525 per token is 0.525 ÷ 2.14 = 0.245 per character. That is lower than 0.36, so the byte-pair model predicts the text better, even though its raw number looks worse.
+- id: q1
+  kind: review
+  section: Homework
+  title: The block in plain words
+  question: Walk through what one transformer block does to its input, and why each part is there.
+  model_answer: 'The input is one vector per position. First, multi-head attention lets each position gather information from earlier positions; several heads do this in parallel so different relationships can be tracked at once. Second, a feed-forward network processes each position''s gathered information independently. Each of the two is wrapped the same way: normalise the input so its scale is steady, run the sub-layer, and add the result to the input. The addition is a residual connection, which keeps gradients flowing through a deep stack and lets a block start as a near pass-through and learn a correction.'
+- id: q2
+  kind: review
+  section: Homework
+  title: Spotting overfitting
+  question: How do you tell that a model is overfitting, and what are your options when it is?
+  model_answer: 'Hold back validation data the model never trains on and track both losses. Overfitting shows as training loss still falling while validation loss flattens or rises. Options, roughly in order: stop training at the best validation loss; get more or more varied data; make the model smaller; add regularisation such as dropout or weight decay. Also check that the validation data really is independent of the training data; near-duplicates across the split hide overfitting, which is a live risk with templated text such as ours.'
+- id: q3
+  kind: review
+  section: Homework
+  title: Is a loss of 0.36 good?
+  question: Someone reports a validation loss of 0.36 per character and calls the model excellent. What do you ask before agreeing?
+  model_answer: What the data is and how the split was made. A loss measures how predictable this data is to this model, so highly repetitive or templated text gives a low loss to a mediocre model. I would ask for a baseline on the same data, such as a bigram model or a compression ratio, whether validation text overlaps training text, what unit the loss is per, and above all how the model performs on the task it is for, since a low next-token loss is not the same as being useful.
+- id: q4
+  kind: review
+  section: Homework
+  title: Where the parameters are
+  question: Where do a transformer's parameters sit, and what happens to the count when you double the width?
+  model_answer: Mostly in the feed-forward layers, then the attention projections, then the embeddings and output layer. The matrices inside a block are width by width, or width by four times width, so doubling the width roughly quadruples the parameters in every block, while doubling the number of blocks only doubles them. The embedding and output layers grow with vocabulary times width. Context length adds almost no parameters; it adds computation, through attention's square-of-length cost.
+- id: q5
+  kind: review
+  section: Homework
+  title: From this model to a real one
+  question: What is the same and what is different between the model you trained and a large language model used in a product?
+  model_answer: 'The same: the architecture, block for block; the training objective of predicting the next token with cross-entropy; the loop of forward, backward and step. Different: scale, by a factor of thousands in parameters and millions in training text; a sub-word tokenizer with tens of thousands of tokens; a context of thousands to hundreds of thousands of tokens; and what happens after pre-training, namely fine-tuning on conversations and instructions, safety training and evaluation. Ours has learned the patterns of one generated corpus. A large model has learned enough about language and the world to follow new instructions.'

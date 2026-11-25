@@ -1,0 +1,22 @@
+<p>Here is the model you trained in session 4 beside the one already installed on this Mac. The second column is not a different kind of thing.</p>
+<table class="plain">
+  <thead><tr><th></th><th>Your GPT</th><th>qwen3:4b</th></tr></thead>
+  <tbody>
+    <tr><td>Architecture</td><td>decoder-only transformer</td><td>decoder-only transformer</td></tr>
+    <tr><td>Parameters</td><td>827,981</td><td>4.0 billion, about 4,800 times more</td></tr>
+    <tr><td>Vector width</td><td>128</td><td>2,560</td></tr>
+    <tr><td>Tokens</td><td>77 characters</td><td>a sub-word vocabulary of roughly 150,000</td></tr>
+    <tr><td>Context</td><td>128 characters</td><td>up to 262,144 tokens</td></tr>
+    <tr><td>Trained on</td><td>730 KB of incident threads, for 46 seconds</td><td>a large share of the public internet, for weeks on a data centre</td></tr>
+    <tr><td>Then</td><td>nothing</td><td>fine-tuned to follow instructions and hold a conversation</td></tr>
+    <tr><td>Default sampling</td><td>whatever you pass</td><td>temperature 0.6, top-k 20, top-p 0.95</td></tr>
+  </tbody>
+</table>
+<p>The last row is worth a second look. The model ships with the three controls you are about to implement already set, chosen by its makers. When output seems too random or too repetitive, those are the first things to check.</p>
+
+<p>Three differences you will meet as soon as you call it:</p>
+<ul>
+  <li><strong>It was taught to follow instructions.</strong> Yours only continues text. The large model was further trained on examples of requests and good responses, wrapped in special tokens that mark who is speaking. That fine-tuning, not the architecture, is what makes it an assistant.</li>
+  <li><strong>It may think before it answers.</strong> This model writes out its reasoning first and then the answer. The reasoning is returned separately, but it is generated token by token like everything else: on this Mac, over 1,200 tokens and 24 seconds for a one-sentence reply. Thinking can be switched off for simple structured answers, and whether to allow it is a cost decision you will make repeatedly.</li>
+  <li><strong>It is general, not informed.</strong> It has never seen Time Travel Inc.'s incidents, services or runbooks. In the third experiment you ask it to triage five real incidents cold. Keep the result: improving on it is what sessions 6 to 10 are for.</li>
+</ul>

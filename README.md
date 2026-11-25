@@ -1,0 +1,90 @@
+# Agent Quest
+
+An open-source, hands-on learning environment that takes you from understanding
+how LLMs work to building your first functional AI agent, using a realistic
+incident management application.
+
+The setting is a fictional travel company, Time Travel Inc. (flights, hotels,
+cruises), with a service desk holding 500 past incidents and an on-call team
+that needs help with first-pass triage. Each idea is built once by hand, then
+replaced with the standard tool and measured. Everything runs on one machine,
+and the built-in assistant, Buddy, uses only a model running locally.
+
+## Two separate applications
+
+| | Address | What it is |
+|---|---|---|
+| **Service desk** | `http://localhost:8080` | Time Travel Inc.'s incident management tool: queues of open and resolved incidents, incident records with work notes, a form to raise a new incident, services and runbooks. It also serves a ServiceNow-style JSON interface under `/api`. |
+| **Course app** | `http://localhost:8000` | 14 sessions, each with pre-work to watch, a lesson with interactive diagrams, short coding exercises, experiments and homework. It tracks your progress. |
+
+They share no code and no routes. The course app only links to the service
+desk, and the triage agent you build talks to the desk over HTTP, like any
+other client would.
+
+The desk holds 500 generated incidents (P1 to P4) across 12 services. Each
+resolved incident carries a troubleshooting thread of 7 to 15 timestamped
+work notes from several people (service desk, on-call engineers, incident
+commander, customer support, supplier relations): diagnostics, a first guess
+that was ruled out, the cause, the fix, and a closing note with root cause,
+fix and follow-up. The
+400 oldest are resolved history. The 100 newest sit in the open queue with
+no priority, service or resolution, waiting for triage; their correct
+answers are kept aside for scoring the agent.
+
+## Getting started
+
+Needs Python 3.12 or newer.
+
+```bash
+make setup    # create .venv and install dependencies
+make data     # generate the incidents (same data every time)
+make serve    # start both apps, each as its own process
+make test     # run the tests
+make setup-lessons   # PyTorch, for the exercises in sessions 2 to 5 (about 80 MB)
+```
+
+To run one app on its own, use `make desk` or `make course`.
+
+With Docker, each app runs in its own container:
+
+```bash
+make up       # docker compose up --build
+make down
+```
+
+## How a session works
+
+1. **Pre-work.** Watch the videos and skim the reading on the session page.
+   Videos play in the page and mark themselves done when the segment ends.
+2. **Concept.** Read the lesson and try the interactive diagram.
+3. **Build.** Open the file named in each exercise, for example
+   `lessons/01-tokenization/bpe.py`, and fill the gap marked `YOUR CODE`.
+   Press **Run the tests**. An exercise is done when its tests pass; it
+   cannot be ticked by hand.
+4. **Experiment.** Write your prediction in the page first, then run the
+   command shown.
+5. **Homework.** A short problem set and design review questions, each with
+   a worked answer to compare against.
+
+Reference solutions are in each lesson's `_solution/` folder.
+
+Session 5 talks to a model running locally under [Ollama](https://ollama.com)
+(`qwen3:4b`) and to the service desk, so have both running for its
+experiments. Exercises are run on your machine with `make serve`; the Docker
+image for the course app does not include PyTorch.
+
+## Where things are kept
+
+| Path | What |
+|---|---|
+| `data/progress.json` | Your progress and written answers. Delete it to start again. |
+| `data/timetravel.db` | The incidents. `make data` rebuilds it and never touches your progress. |
+| `data/corpus.txt` | Text of the 400 history incidents, used for training in the fundamentals sessions. |
+| `data/eval_labels.json` | Correct answers for the 100 held-back incidents. |
+| `servicedesk/` | The service desk application: catalog, incident generator, database, interface and pages. |
+| `course/` | The course application. |
+| `docker/`, `docker-compose.yml` | One container per application. |
+| `docs/` | Roadmap, design and build plans. |
+
+`data/` is not committed; every file in it can be regenerated except
+`progress.json`.

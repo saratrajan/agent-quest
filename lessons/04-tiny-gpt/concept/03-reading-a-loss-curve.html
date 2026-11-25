@@ -1,0 +1,25 @@
+<p>You now have a model big enough to memorise. That changes how its loss must be measured. The data is split: 90% to train on, 10% the model never trains on, called <strong>validation</strong> data. <code>estimate_loss</code> measures both.</p>
+<ul>
+  <li><strong>Training loss</strong> says how well the model fits what it has seen.</li>
+  <li><strong>Validation loss</strong> says how well it predicts text it has not seen, which is the only thing you care about.</li>
+</ul>
+<p>Both fall together at first. When the training loss keeps falling and the validation loss flattens or rises, the model has started memorising its training text. That gap is <strong>overfitting</strong>, and the validation curve is where you read it.</p>
+
+<p>Run the training script in the first experiment, then press Refresh. Every run you make is drawn here: solid for training, dashed for validation.</p>
+<div data-widget="loss-chart"></div>
+<script src="/lessons-static/04-tiny-gpt/widgets/loss-chart.js"></script>
+
+<p>For scale, here is the path so far on the same incident text, each measured on this Mac:</p>
+<table class="plain">
+  <thead><tr><th>Model</th><th>Context it can use</th><th>Loss</th></tr></thead>
+  <tbody>
+    <tr><td>Uniform guess over 77 characters</td><td>none</td><td>4.34</td></tr>
+    <tr><td>Bigram table (session 2)</td><td>1 character</td><td>about 2.35</td></tr>
+    <tr><td>One attention head (session 3)</td><td>32 characters</td><td>about 2.20</td></tr>
+    <tr><td>Your GPT: 4 blocks, 4 heads (this session)</td><td>128 characters</td><td>about 0.36 on validation</td></tr>
+  </tbody>
+</table>
+
+<p>A caution about that last number. A loss of 0.36 per character would be extraordinary on ordinary English, where good character-level models score a little above 1. It is this low here because the incident threads are generated from a limited set of sentence patterns, so much of the validation text closely resembles training text. The model has learned the patterns well; it has not learned English. Keep that distinction: a loss tells you how well a model predicts <em>this</em> data, and how hard the data is matters as much as how good the model is.</p>
+
+<p>That is the whole of a GPT. What separates this from a model you would give a real task is scale: thousands of times more parameters and millions of times more text. Session 5 puts the two side by side.</p>

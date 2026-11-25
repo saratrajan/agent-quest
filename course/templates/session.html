@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from "_cover.html" import cover %}
+{% block title %}Session {{ s.number }} · {{ s.title }}{% endblock %}
+{% set kinds = {"video": "Watch", "reading": "Read", "concept": "Concept", "exercise": "Build", "experiment": "Experiment", "problem": "Problem", "review": "Design review"} %}
+{% set done_labels = {"video": "Mark as watched", "reading": "Mark as read", "concept": "Mark as read", "experiment": "Mark as done", "problem": "Mark as done", "review": "Mark as done"} %}
+
+{% macro complete_button(st) %}<button class="btn" type="button" data-action="complete" data-label="{{ done_labels[st.kind] }}" aria-pressed="{{ 'true' if st.done else 'false' }}">{{ "Mark as not done" if st.done else done_labels[st.kind] }}</button>{% endmacro %}
+{% macro answer_box(st, label) %}<label class="eyebrow" for="answer-{{ st.id }}">{{ label }}</label>
+<textarea id="answer-{{ st.id }}" data-answer data-saved="{{ st.answer }}">{{ st.answer }}</textarea><span class="saved" role="status"></span>{% endmacro %}
+
+{% block main %}
+{% if not released %}
+<section class="empty">
+  <span class="eyebrow">Session {{ "%02d" % s.number }} · {{ s.phase }}</span>
+  <h1>{{ s.title }}</h1>
+  <p>{{ s.summary }}</p>
+  <p><strong>Not yet released.</strong> This session's material is written just before you reach it, so it can build on how the earlier ones went.</p>
+  <p><a class="btn" href="/">Back to the course</a></p>
+</section>
+{% elif locked %}
+<div class="sessionhead">
+  {{ cover(s.number) }}
+  <div class="info">
+    <span class="eyebrow">Session {{ "%02d" % s.number }} · {{ s.phase }}</span>
+    <h1>{{ s.title }}</h1>
+    <p class="meta">{{ s.steps | length }} steps · {{ includes | join(" · ") }}</p>
+    <p class="muted">{{ s.summary }}</p>
+    <p class="notice"><strong>Locked.</strong> Finish session {{ s.number - 1 }} to unlock this one.</p>
+    <div class="actions"><a class="btn primary" href="/sessions/{{ s.number - 1 }}">Go to session {{ s.number - 1 }}</a></div>
+  </div>
+</div>
+<div class="learn">
+  <div>{% if s.outcomes %}<h3>What you'll learn</h3><ul>{% for o in s.outcomes %}<li class="outcome">{{ o }}</li>{% endfor %}</ul>{% else %}<h3>About this session</h3><p class="muted" style="margin-top:.6rem">{{ s.summary }}</p>{% endif %}</div>
+  <div><h3>This session includes</h3><ul>{% for item in includes %}<li>{{ item }}</li>{% endfor %}</ul></div>
+</div>
+{% else %}
+<div class="sessionhead">
+  {{ cover(s.number, play=true) }}
+  <div class="info">
+    <span class="eyebrow">Session {{ "%02d" % s.number }} · {{ s.phase }}</span>
+    <h1>{{ s.title }}</h1>
+    <p class="meta">{{ s.total }} steps · {{ includes | join(" · ") }}</p>
+    <p class="muted">{{ s.summary }}</p>
+    <div class="actions"><a class="btn primary" href="#step-{{ next }}">{{ "Review" if s.done == s.total else ("Continue" if s.done else "Start") }} learning</a></div>
+  </div>
+</div>
+{% if s.notice %}<p class="notice">{{ s.notice }}</p>{% endif %}
+<div class="learn">
+  <div>{% if s.outcomes %}<h3>What you'll learn</h3><ul>{% for o in s.outcomes %}<li class="outcome">{{ o }}</li>{% endfor %}</ul>{% else %}<h3>About this session</h3><p class="muted" style="margin-top:.6rem">{{ s.summary }}</p>{% endif %}</div>
+  <div><h3>This session includes</h3><ul>{% for item in includes %}<li>{{ item }}</li>{% endfor %}</ul></div>
+</div>
+<div class="session" data-session-number="{{ s.number }}">
+  <aside class="toc" aria-label="Steps in this session">
+    <div><span class="eyebrow" data-progress-text>{{ s.done }} of {{ s.total }} steps done</span>
+    <div class="bar" style="margin-top:.5rem"><i data-progress-bar style="width: {{ (100 * s.done / s.total) if s.total else 0 }}%"></i></div></div>
+    {% for section in sections %}{% set group = s.steps | selectattr("section", "equalto", section) | list %}{% if group %}
+    <div><span class="eyebrow">{{ section }}</span>
+    <ol>{% for st in group %}<li><a href="#step-{{ st.id }}" data-step="{{ st.id }}" data-done="{{ 'true' if st.done else 'false' }}"><span class="dot" aria-hidden="true"></span><span>{{ st.title }}</span></a></li>{% endfor %}</ol></div>
+    {% endif %}{% endfor %}
+  </aside>
+
+  <div class="steps">
+    {% for section in sections %}{% set group = s.steps | selectattr("section", "equalto", section) | list %}{% if group %}
+    <h2 class="section-title">{{ section }}</h2>
+    {% for st in group %}
+    <article class="step" id="step-{{ st.id }}" data-step="{{ st.id }}" data-kind="{{ st.kind }}" data-done="{{ 'true' if st.done else 'false' }}">
+      <div class="head"><div><span class="kind">{{ kinds[st.kind] }}{% if st.kind == "video" %} · {{ st.channel }} · {{ ((st.end - st.start) / 60) | round | int }} min{% elif st.kind == "problem" %} · {{ st.points }} points{% endif %}</span><h3>{{ st.title }}</h3></div><span class="state">✓ Done</span></div>
+
+      {% if st.kind == "video" %}
+      <div><span class="eyebrow">Watch for</span><ul class="watch">{% for w in st.watch_for %}<li>{{ w }}</li>{% endfor %}</ul></div>
+      <div class="player" data-youtube="{{ st.youtube_id }}" data-start="{{ st.start }}" data-end="{{ st.end }}">
+        <button class="poster" type="button" data-action="play"><i class="play" aria-hidden="true"></i><span>Play here</span><small>{{ (st.start // 60) }}:{{ "%02d" % (st.start % 60) }} to {{ (st.end // 60) }}:{{ "%02d" % (st.end % 60) }} · loads from YouTube when you press play</small></button>
+      </div>
+      <p class="player-error" hidden>This video can't play here. Open it on YouTube, then mark it complete.</p>
+      <div class="actions">{{ complete_button(st) }}<a href="https://www.youtube.com/watch?v={{ st.youtube_id }}&amp;t={{ st.start }}s" target="_blank" rel="noopener">Open on YouTube</a></div>
+
+      {% elif st.kind == "reading" %}
+      <p class="muted">{{ st.source }}</p>
+      <p>{{ st.note }}</p>
+      <div class="actions">{{ complete_button(st) }}<a href="{{ st.url }}" target="_blank" rel="noopener">Open the reading</a></div>
+
+      {% elif st.kind == "concept" %}
+      <div class="concept">{{ st.html | safe }}</div>
+      <div class="actions">{{ complete_button(st) }}</div>
+
+      {% elif st.kind == "exercise" %}
+      <p>{{ st.brief }}</p>
+      <p class="muted">Your file: <code>lessons/{{ s.folder }}/{{ st.file }}</code></p>
+      <div class="actions"><button class="btn primary" type="button" data-action="check">Run the tests</button><span class="muted">This step completes when its tests pass.</span></div>
+      <div data-result class="result {{ 'pass' if st.check and st.check.passed else 'fail' }}" {% if not st.check %}hidden{% endif %} role="status">
+        <strong>{% if st.check %}{{ "All tests passed." if st.check.passed else "Not passing yet." }}{% endif %}</strong>
+        <details><summary>Test output</summary><pre>{{ st.check.output if st.check else "" }}</pre></details>
+      </div>
+
+      {% elif st.kind == "experiment" %}
+      <p>{{ st.prompt }}</p>
+      {{ answer_box(st, "Your prediction, before you run it") }}
+      <p class="muted">Then run: <code>{{ st.command }}</code></p>
+      <div class="actions">{{ complete_button(st) }}</div>
+
+      {% elif st.kind == "problem" %}
+      <p>{{ st.prompt }}</p>
+      {{ answer_box(st, "Your answer") }}
+      <details><summary>Show the worked answer</summary><p>{{ st.answer_key }}</p></details>
+      <div class="selfmark"><label for="mark-{{ st.id }}">After comparing, give yourself</label>
+        <select id="mark-{{ st.id }}" data-mark><option value="">choose</option>{% for k in range(st.points + 1) %}<option value="{{ k }}" {{ 'selected' if st.mark == k }}>{{ k }}</option>{% endfor %}</select>
+        <span>of {{ st.points }} points</span><span class="saved" role="status"></span></div>
+      <div class="actions">{{ complete_button(st) }}</div>
+
+      {% elif st.kind == "review" %}
+      <p>{{ st.question }}</p>
+      {{ answer_box(st, "Answer aloud first, then note your key points") }}
+      <details><summary>Compare with a model answer</summary><p>{{ st.model_answer }}</p></details>
+      <div class="actions">{{ complete_button(st) }}</div>
+      {% endif %}
+    </article>
+    {% endfor %}{% endif %}{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

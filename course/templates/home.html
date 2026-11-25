@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "_cover.html" import cover %}
+{% set labels = {"not-started": "Not started", "in-progress": "In progress", "done": "Done", "not-released": "Not yet released", "locked": "Locked"} %}
+{% block main %}
+<section class="hero">
+  <div>
+    <h1>Build the triage agent, one idea at a time</h1>
+    <p class="lede">Fourteen two-hour sessions. Each starts with pre-work to watch; then you build the idea by hand, measure it, and switch to the standard tool.</p>
+    <div class="cta">
+      {% if continue %}<a class="btn bright" href="/sessions/{{ continue.session }}#step-{{ continue.step_id }}">{{ "Continue" if overall.done else "Start" }} session {{ continue.session }} →</a>
+      {% else %}<a class="btn bright" href="/progress">See my progress →</a>{% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="sectionhead"><h2>Continue learning</h2><a href="#all-sessions">See all →</a></div>
+  <div class="picks">
+  {% for s in picks %}
+    <a class="card" data-pick="{{ s.number }}" data-status="{{ s.status }}" href="/sessions/{{ s.number }}">
+      {{ cover(s.number) }}
+      <span class="inside">
+        <h3>{{ s.title }}</h3>
+        <p>{{ s.total }} steps{% if s.includes %} · {{ s.includes[0] }}{% endif %}</p>
+        {% if s.status == "locked" %}<span class="foot"><span class="chip locked">Locked</span><span>after session {{ s.number - 1 }}</span></span>
+        {% else %}<span class="foot"><span class="bar"><i style="width: {{ (100 * s.done / s.total) if s.total else 0 }}%"></i></span><b>{{ ((100 * s.done / s.total) | round | int) if s.total else 0 }}%</b></span>{% endif %}
+      </span>
+    </a>
+  {% else %}<div class="empty"><p>You have finished everything built so far.</p></div>{% endfor %}
+  </div>
+</section>
+
+<section class="dash">
+  <div class="stack">
+    <div class="sectionhead"><h2>Learning paths</h2></div>
+    {% for p in paths %}
+    <a class="path" data-path="{{ loop.index }}" href="#phase-{{ loop.index }}">
+      <span class="pathicon" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="#1d6fe0" stroke-width="2.4"><circle cx="9" cy="32" r="4"/><circle cx="22" cy="14" r="4"/><circle cx="35" cy="26" r="4"/><path d="M11.500 28.500 19.500 17.500M25.500 16 31.800 22.800"/></svg></span>
+      <span class="mid"><b>Phase {{ loop.index }} · {{ p.name }}</b><span>{{ p.blurb }}</span><small>{{ p.count }} sessions · {{ p.built }} built so far</small></span>
+      <span class="go" aria-hidden="true">→</span>
+    </a>
+    {% endfor %}
+  </div>
+  <div class="panel ringpanel">
+    <h2>My learning progress</h2>
+    <div class="ringrow">
+      <svg class="ring" viewBox="0 0 100 100" role="img" aria-label="{{ pct }}% of the steps built so far are done" data-overall="{{ pct }}">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#e1e7f0" stroke-width="10"/>
+        {% if pct %}<circle class="arc" cx="50" cy="50" r="42" fill="none" stroke="#1e8e3e" stroke-width="10" stroke-linecap="round" stroke-dasharray="{{ '%.1f' % (263.9 * pct / 100) }} 263.9" transform="rotate(-90 50 50)"/>{% endif %}
+        <text x="50" y="57" text-anchor="middle">{{ pct }}%</text>
+      </svg>
+      <ul class="keylist">
+        <li><span class="k green"></span>Completed<b data-count="completed">{{ counts["completed"] }}</b></li>
+        <li><span class="k blue"></span>In progress<b data-count="in-progress">{{ counts["in-progress"] }}</b></li>
+        <li><span class="k grey"></span>Not started<b data-count="not-started">{{ counts["not-started"] }}</b></li>
+        <li><span class="k hollow"></span>Not built yet<b data-count="not-built">{{ counts["not-built"] }}</b></li>
+      </ul>
+    </div>
+    <p class="muted">The ring counts steps; the list counts sessions.</p>
+  </div>
+</section>
+
+<section class="tiles">
+  <div class="tile warm"><span>Your learning streak</span><b data-tile="streak">{{ streak }}</b><small>{{ "Keep going!" if streak[0] != "0" else "Complete a step to start one." }}</small></div>
+  <div class="tile"><span>Steps in the last 7 days</span><b data-tile="week">{{ week }}</b><small>of {{ overall.total }} built so far</small></div>
+  <div class="tile trophy">
+    <svg aria-hidden="true" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#b7791f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 0 1-8 0zM6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3M12 12v4M8 20h8" fill="#f6d27a"/></svg>
+    <div>{% if milestone %}<span>Next milestone</span><b>{{ milestone.code }} · {{ milestone.name | capitalize }}</b><small>reached when you finish session {{ milestone.session }}</small>{% else %}<span>Milestones</span><b>All reached</b>{% endif %}</div>
+  </div>
+</section>
+
+<span id="all-sessions"></span>
+{% for phase, blurb in [("Fundamentals", "How a language model works, built by hand"), ("The agent", "Retrieval, tools, guardrails and measurement on the service desk")] %}
+<section class="phase {{ 'two' if loop.index == 2 }}" id="phase-{{ loop.index }}">
+  <div class="sectionhead"><h2>Phase {{ loop.index }} · {{ phase }}</h2><span class="muted">{{ blurb }}</span></div>
+  <ul class="cards">
+  {% for s in sessions if s.phase == phase %}
+    <li data-session="{{ s.number }}">
+    <a class="card" data-status="{{ s.status }}" href="/sessions/{{ s.number }}">
+      {{ cover(s.number) }}
+      <span class="inside">
+        <h3>{{ s.title }}</h3>
+        <p>{{ s.summary }}</p>
+        {% if s.status == "not-released" %}<span class="foot"><span class="chip">{{ labels[s.status] }}</span></span>
+        {% elif s.status == "locked" %}<span class="foot"><span class="chip locked">Locked</span><span>Finish session {{ s.number - 1 }} to unlock</span></span>
+        {% else %}<span class="foot"><span>{{ s.done }} of {{ s.total }} steps</span><span class="bar"><i style="width: {{ (100 * s.done / s.total) if s.total else 0 }}%"></i></span><b>{{ ((100 * s.done / s.total) | round | int) if s.total else 0 }}%</b></span>{% endif %}
+      </span>
+    </a>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endblock %}

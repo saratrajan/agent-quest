@@ -1,0 +1,20 @@
+<p>Session 1 turned text into a list of token numbers. A language model's whole job is one function: given the tokens so far, give a score to every token in the vocabulary for "how likely is this one to come next". Those scores are called <strong>logits</strong>.</p>
+
+<p>The simplest possible version looks only at the current token. That is a <strong>bigram model</strong>, and it is nothing more than a table with one row per token:</p>
+<table class="plain">
+  <thead><tr><th>Current token</th><th>score for "a"</th><th>score for "1"</th><th>score for "R"</th><th>…</th></tr></thead>
+  <tbody>
+    <tr><td><code>P</code></td><td>1.9</td><td>0.2</td><td>1.3</td><td>…</td></tr>
+    <tr><td><code>I</code></td><td>−0.8</td><td>−1.1</td><td>0.1</td><td>…</td></tr>
+    <tr><td><code>e</code></td><td>0.3</td><td>−2.0</td><td>−1.4</td><td>…</td></tr>
+  </tbody>
+</table>
+<p>To predict what follows <code>P</code>, read off row <code>P</code>. In PyTorch that lookup is <code>nn.Embedding(vocab, vocab)</code>: give it token numbers, get back their rows. An <strong>embedding</strong> is exactly this, a learned row of numbers per token. Here the row happens to be the scores themselves; from session 3 on the row will be a compact description of the token that later layers turn into scores.</p>
+
+<p>In this session the tokens are single characters, so the vocabulary is the 77 distinct characters in the incident threads and the table has 77 × 77 = 5,929 numbers. Small enough to print and read.</p>
+
+<p>The shapes you will meet in the code, for a batch of <em>B</em> windows of <em>T</em> tokens:</p>
+<p class="math">idx : (B, T) → logits : (B, T, V), where V is the vocabulary size</p>
+<p>Every position in every window gets its own row of <em>V</em> scores, so one batch of 32 windows of 8 tokens makes 256 predictions at once.</p>
+
+<p>The table starts as random numbers. Training is the process of changing them until row <code>P</code> really does say what tends to follow <code>P</code> in your tickets. The next two steps cover how the model is told it is wrong, and how it corrects itself.</p>

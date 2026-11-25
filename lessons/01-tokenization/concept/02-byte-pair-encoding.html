@@ -1,0 +1,30 @@
+<p><strong>Byte-pair encoding</strong> builds the vocabulary from the data. Start with the 256 byte values. Find the pair of adjacent tokens that occurs most often, give that pair a new token number, and replace it everywhere. Repeat until the vocabulary is as large as you want.</p>
+
+<p>The algorithm, stated exactly as your code will implement it:</p>
+<ol>
+  <li>Let <em>ids</em> be the UTF-8 bytes of the training text, and <em>next</em> = 256.</li>
+  <li>Count every adjacent pair (<em>ids</em><sub>i</sub>, <em>ids</em><sub>i+1</sub>).</li>
+  <li>Take the pair with the highest count. If two pairs tie, take the one that appeared first. If the best count is below 2, stop.</li>
+  <li>Replace each non-overlapping occurrence of that pair, left to right, with <em>next</em>. Record the merge and add 1 to <em>next</em>.</li>
+  <li>Go to step 2 until <em>next</em> reaches the target vocabulary size.</li>
+</ol>
+
+<p>Work it by hand once on the string <code>aaabdaaabac</code>, with a = 97, b = 98, c = 99, d = 100:</p>
+<table class="plain">
+  <thead><tr><th>Round</th><th>Sequence</th><th>Most frequent pair</th><th>New token</th></tr></thead>
+  <tbody>
+    <tr><td>start</td><td><code>a a a b d a a a b a c</code> (11)</td><td>(a, a), 4 times</td><td>256 = "aa"</td></tr>
+    <tr><td>1</td><td><code>256 a b d 256 a b a c</code> (9)</td><td>(256, a) and (a, b) tie at 2; (256, a) came first</td><td>257 = "aaa"</td></tr>
+    <tr><td>2</td><td><code>257 b d 257 b a c</code> (7)</td><td>(257, b), 2 times</td><td>258 = "aaab"</td></tr>
+    <tr><td>3</td><td><code>258 d 258 a c</code> (5)</td><td>no pair occurs twice</td><td>stop</td></tr>
+  </tbody>
+</table>
+<p>Eleven bytes became five tokens, and the vocabulary grew from 256 to 259. Those are the exact numbers your tests check.</p>
+
+<p>Step through it yourself below. Change the text to a real incident summary and watch which pieces the algorithm discovers.</p>
+<div data-widget="bpe-stepper"></div>
+<script src="/lessons-static/01-tokenization/widgets/bpe-stepper.js"></script>
+
+<p><strong>Encoding new text</strong> replays the recorded merges in the order they were learned. <strong>Decoding</strong> expands each token back to its bytes. Because merges only ever join existing tokens, every token expands to a definite byte string and the round trip is exact.</p>
+
+<p class="ref">Source: Sennrich, Haddow and Birch (2016), <em>Neural Machine Translation of Rare Words with Subword Units</em>. The idea began as a compression method: Gage (1994), <em>A New Algorithm for Data Compression</em>.</p>

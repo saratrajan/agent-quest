@@ -1,0 +1,168 @@
+outcomes:
+- Implement temperature, top-k and top-p sampling, and say what each is for.
+- Explain the context window as a token budget, and what happens when a prompt exceeds it.
+- Describe what is the same and what differs between the GPT you trained and a 4-billion-parameter model.
+- 'Measure a real model''s speed, and see how it triages incidents with no help: the baseline the agent must beat.'
+steps:
+- id: intro-to-llms
+  kind: video
+  section: Pre-work
+  title: 'Intro to large language models: inference, training and fine-tuning'
+  channel: Andrej Karpathy
+  youtube_id: zjkBMFhNj_g
+  start: 0
+  end: 1265
+  watch_for:
+  - 'A model as two files: the parameters, and a few hundred lines of code that run them.'
+  - Training as compressing a large amount of text, and why the result can produce plausible but false text.
+  - The second stage, fine-tuning into an assistant, which your GPT from session 4 never had.
+- id: softmax-temperature
+  kind: video
+  section: Pre-work
+  title: Softmax with temperature
+  channel: 3Blue1Brown
+  youtube_id: wjZofJX0v4M
+  start: 1342
+  end: 1563
+  watch_for:
+  - Temperature as a divisor applied to the scores before the softmax.
+  - What a temperature of zero and a high temperature each do to the output.
+  - Why a little randomness tends to read better than always taking the top choice.
+- id: nucleus-paper
+  kind: reading
+  section: Pre-work
+  title: The curious case of neural text degeneration
+  source: Holtzman, Buys, Du, Forbes and Choi, 2020 · arXiv:1904.09751
+  url: https://arxiv.org/abs/1904.09751
+  note: 'The paper that introduced top-p sampling. Read the introduction and look at figure 1, which shows text going wrong in two opposite ways: repetitive when always taking the likeliest token, incoherent when sampling the whole distribution. Then read section 3.1 for the method.'
+- id: choosing-the-next-token
+  kind: concept
+  section: Session
+  title: Temperature, top-k and top-p
+  file: concept/01-choosing-the-next-token.html
+- id: ex-temperature
+  kind: exercise
+  section: Session
+  title: Temperature
+  file: sampling.py
+  test: lessons/05-toy-to-real/test_sampling.py::test_temperature_on_the_lesson_example lessons/05-toy-to-real/test_sampling.py::test_temperature_above_one_flattens_and_below_one_sharpens
+  brief: 'Write apply_temperature: one line, dividing the scores by the temperature.'
+- id: ex-top-k
+  kind: exercise
+  section: Session
+  title: Top-k
+  file: sampling.py
+  test: lessons/05-toy-to-real/test_sampling.py::test_top_k_keeps_the_k_most_likely
+  brief: 'Write top_k_filter: find the k-th highest score and set everything below it to minus infinity. Leave the scores alone when k covers the whole vocabulary.'
+- id: ex-top-p
+  kind: exercise
+  section: Session
+  title: Top-p
+  file: sampling.py
+  test: lessons/05-toy-to-real/test_sampling.py::test_top_p_keeps_the_smallest_set_that_reaches_p lessons/05-toy-to-real/test_sampling.py::test_top_p_works_whatever_order_the_tokens_are_in
+  brief: 'Write top_p_filter: sort the probabilities from high to low, keep each token while the total before it is still below p, and set the rest to minus infinity in their original positions.'
+- id: ex-sample-next
+  kind: exercise
+  section: Session
+  title: Putting the controls together
+  file: sampling.py
+  test: lessons/05-toy-to-real/test_sampling.py::test_temperature_zero_means_take_the_most_likely lessons/05-toy-to-real/test_sampling.py::test_top_k_one_always_returns_the_top_token lessons/05-toy-to-real/test_sampling.py::test_sample_next_never_returns_a_filtered_token lessons/05-toy-to-real/test_sampling.py::test_sampling_follows_the_distribution
+  brief: 'Write sample_next: return the argmax when the temperature is 0; otherwise apply temperature, then top-k, then top-p, and draw one token from what remains.'
+- id: the-context-window
+  kind: concept
+  section: Session
+  title: The context window is a budget
+  file: concept/02-the-context-window.html
+- id: toy-and-real
+  kind: concept
+  section: Session
+  title: Your GPT beside a real model
+  file: concept/03-toy-and-real.html
+- id: exp-sweep
+  kind: experiment
+  section: Session
+  title: The same controls on both models
+  prompt: 'Your GPT from session 4 continues "Payments error rate" at temperatures 0, 0.7 and 1.5, then at 1.5 with top-p 0.9, all through your sample_next. Then qwen3:4b writes one sentence at temperatures 0 (twice), 0.7 and 1.5. Predict: what does your GPT''s text look like at 1.5, and does top-p rescue it? Will the two temperature-0 answers from qwen3 be identical? This takes about two minutes.'
+  command: python lessons/05-toy-to-real/compare.py --sweep
+- id: exp-limits
+  kind: experiment
+  section: Session
+  title: Speed and the context window
+  prompt: First the script measures tokens per second. Predict the figure, and how long a 250-token triage note would take. Then it puts a code word at the start of a prompt, follows it with 400 log lines, and asks for the code word, once with a window of 1,024 tokens and once with 16,384. Predict what each run answers and how many prompt tokens each reports reading.
+  command: python lessons/05-toy-to-real/compare.py --limits
+- id: exp-triage
+  kind: experiment
+  section: Session
+  title: Triage with no help
+  prompt: 'With the service desk running (make desk), qwen3:4b is given the summary and description of five resolved incidents and asked for a priority and a service, with no past incidents, runbooks or catalog. Predict how many priorities and how many services it gets right out of five, and which way its priority errors will lean. Write down the result: session 6 starts from it.'
+  command: python lessons/05-toy-to-real/compare.py --triage 5
+- id: tool-use-video
+  kind: video
+  section: Homework
+  title: 'Tool use: what a model can do beyond writing text'
+  channel: Andrej Karpathy
+  youtube_id: zjkBMFhNj_g
+  start: 1663
+  end: 2012
+  watch_for:
+  - How the model decides to call a tool, and that the call is just more generated tokens.
+  - 'What comes back from the tool and where it goes: into the context window.'
+  - Which tools a triage agent would want. You build that loop in session 9.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: Temperature by hand
+  prompt: Scores are [1.0, 0.0]. Compute the probability of the first token at temperatures 1, 0.5 and 2. What happens as the temperature approaches 0, and as it grows very large?
+  answer: 'Divide the scores first. T = 1: [1, 0] gives e / (e + 1) = 0.731. T = 0.5: [2, 0] gives e² / (e² + 1) = 0.881. T = 2: [0.5, 0] gives 0.622. As the temperature approaches 0 the first token''s probability approaches 1, which is taking the most likely token. As it grows large the scores all approach 0 and the distribution approaches uniform, here 0.5 each.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: Top-k against top-p
+  prompt: 'Two distributions over four tokens: A is [0.97, 0.01, 0.01, 0.01] and B is [0.25, 0.25, 0.25, 0.25]. How many tokens does top-k = 2 keep in each, and how many does top-p = 0.9 keep? Which behaviour would you prefer and why?'
+  answer: Top-k = 2 keeps two tokens in both, so in A it keeps a 1% token the model considers very unlikely, and in B it discards two tokens that are as good as the ones it keeps. Top-p = 0.9 keeps one token in A (0.97 already reaches 0.9) and all four in B (three give only 0.75). Top-p adapts to how sure the model is, which is usually what you want.
+- id: p3
+  kind: problem
+  section: Homework
+  points: 3
+  title: The cost of thinking
+  prompt: On this Mac qwen3:4b generated 1,277 tokens in 24 seconds to produce a one-sentence answer of about 25 tokens. What share of the generated tokens was the answer? At the same speed, how long would the 25-token answer alone have taken? What does this suggest for an agent that must triage an incident within a few seconds?
+  answer: '25 ÷ 1,277 is about 2%: 98% of the work was reasoning the user never sees. The speed is 1,277 ÷ 24 = 53 tokens a second, so 25 tokens would take about half a second. For a time-critical step, switch thinking off and ask for a short structured answer; allow thinking only where it measurably improves the result, and measure both the quality and the time.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: A prompt that does not fit
+  prompt: In the experiment, the run with a 1,024-token window reported reading 514 prompt tokens of a prompt that is about 6,300 tokens long, and could not find the code word. Explain what happened to the prompt, and why this failure is dangerous in a production agent.
+  answer: 'The prompt was longer than the window, so it was cut down to fit, leaving room for the answer. The part that was dropped included the start, where the code word was, so the model never saw it. Nothing raised an error: the model answered confidently from what was left. In an agent that means instructions or key evidence can vanish without notice, so count tokens before sending, set the window deliberately, and treat any truncation as a failure to log.'
+- id: q1
+  kind: review
+  section: Homework
+  title: Choosing sampling settings
+  question: How would you set temperature and top-p for a triage agent, and would you use the same settings for drafting a customer message?
+  model_answer: For triage I want the same incident to get the same answer every time, so temperature 0, or very low with a fixed seed. Decisions that are audited and compared across runs should not vary by chance, and evaluation is meaningless if they do. For drafting a customer message some variety reads better, so a moderate temperature around 0.7 with top-p near 0.9 to cut the unlikely tail. In both cases I would confirm the choice with measurements instead of assuming it.
+- id: q2
+  kind: review
+  section: Homework
+  title: Is temperature 0 deterministic?
+  question: A colleague says setting the temperature to 0 makes the model deterministic. Is that right?
+  model_answer: 'Mostly, on one machine with one version. Temperature 0 means taking the most likely token at each step, and in our experiment two runs gave identical text. It is not a guarantee: near-ties can be broken differently by floating-point differences across hardware, batch sizes or library versions, and hosted models change underneath you. So treat it as much less variance, record the model version and settings with every result, and build evaluations that tolerate small differences in wording.'
+- id: q3
+  kind: review
+  section: Homework
+  title: Budgeting the context window
+  question: How do you decide what goes into the context window for each request, and what do you do when it does not fit?
+  model_answer: 'Treat it as a budget in tokens with fixed and variable parts. Fixed: instructions and output format, plus a reserve for the answer and any reasoning. Variable: the task and the retrieved evidence. Count tokens with the model''s own tokenizer before sending. When it does not fit, cut the variable part deliberately: retrieve fewer passages, rank them and keep the best, trim each to the relevant lines, or summarise older material. Never let the runtime truncate without notice, because that drops content you did not choose to drop.'
+- id: q4
+  kind: review
+  section: Homework
+  title: When to let a model think
+  question: Some models can reason at length before answering. When is that worth it for an agent, and how would you decide?
+  model_answer: It is a trade of time and cost for quality, and whether the quality appears is an empirical question. It tends to help on problems with several steps or conflicting evidence, and to be wasted on lookups and simple classification; in one of our own trials the thinking run gave a worse answer than the direct one. I would measure accuracy and latency with and without it on a representative set, use it only for the steps where it pays, cap its length, and keep the fast path for anything a person is waiting on.
+- id: q5
+  kind: review
+  section: Homework
+  title: Why the unaided model is a poor triager
+  question: A capable general model got one priority in five right on our incidents. Why, and what would you give it?
+  model_answer: 'It knows language and general operations, but nothing about this company: which services exist, how severe a given symptom has been here before, who owns what, or what was done last time. Priority in particular is a local convention, and the model leaned towards calling everything critical. It needs the company''s own evidence at the moment of decision: similar past incidents with their final priority and resolution, the service catalog, relevant runbooks and recent deploys. Supplying those is retrieval and tool use, and whether they help is settled by measuring against held-back incidents.'
