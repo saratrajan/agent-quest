@@ -1,8 +1,20 @@
-# Agent Quest
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/agent-quest-logo-dark.png">
+    <img src="assets/brand/agent-quest-logo.png" alt="Agent Quest. Learn AI. Build Agents. Solve Real Problems." width="440">
+  </picture>
+</p>
 
-An open-source, hands-on learning environment that takes you from understanding
-how LLMs work to building your first functional AI agent, using a realistic
-incident management application.
+<p align="center">
+  An open-source, hands-on learning environment that takes you from understanding how LLMs work<br>
+  to building your first functional AI agent, using a realistic incident management application.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-1d6fe0" alt="Licence: MIT"></a>
+  <img src="https://img.shields.io/badge/python-3.12%2B-0e7c86" alt="Python 3.12 or newer">
+  <img src="https://img.shields.io/badge/runs-100%25%20locally-c2570a" alt="Runs entirely on your machine">
+</p>
 
 The setting is a fictional travel company, Time Travel Inc. (flights, hotels,
 cruises), with a service desk holding 500 past incidents and an on-call team

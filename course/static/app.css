@@ -247,3 +247,11 @@ main{max-width:1120px;width:100%;padding:1.5rem 1.5rem 4rem;gap:var(--space-6)}
 .path .sicon{background:#fff}
 .bigicon{display:grid;place-items:center;background:var(--accent-soft);border-radius:12px;min-height:170px}
 .empty .sicon{margin-bottom:.4rem}
+
+/* ---- the Agent Quest logo in the side rail ---- */
+.sidebar .brand{display:flex;align-items:center;gap:.6rem;padding:0 .4rem;text-decoration:none}
+.sidebar .brand img{flex:none;object-fit:contain}
+.sidebar .brand .wordmark{font:800 1.3rem/1 var(--font-sans);letter-spacing:-.02em;color:#fff}
+.sidebar .brand .wordmark b{display:inline;font-size:inherit;color:#ff8a1f}
+.sidebar .tagline{margin:-1rem 0 0;padding:0 .5rem;font-size:.68rem;line-height:1.35;color:#aebfdb}
+@media (max-width:820px){.sidebar .tagline{display:none}}

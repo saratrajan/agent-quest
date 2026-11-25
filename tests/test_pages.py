@@ -269,3 +269,32 @@ def test_icon_set_is_complete():
 def conftest_steps():
     from conftest import STEPS
     return STEPS
+
+
+# --- the Agent Quest logo
+
+def test_portal_shows_the_real_logo_mark_and_tab_icon(client):
+    h = client.get("/").text
+    side = h.split('class="sidebar"')[1].split("</aside>")[0]
+    assert '<img src="/static/brand/mark-dark.png' in side and "Agent" in side and "Quest" in side
+    assert "Solve Real Problems" in side and "<rect" not in side.split("</a>")[0]  # the placeholder square is gone
+    assert '<link rel="icon" type="image/png" href="/static/brand/mark.png' in h
+    for name in ["mark-dark.png", "mark.png"]:
+        r = client.get(f"/static/brand/{name}")
+        assert r.status_code == 200 and r.content[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_readme_opens_with_the_logo_and_every_local_image_exists():
+    from pathlib import Path
+    text = Path("README.md").read_text()
+    assert text.lstrip().startswith('<p align="center">') and "agent-quest-logo.png" in text.split("##")[0]
+    assert 'media="(prefers-color-scheme: dark)"' in text and "agent-quest-logo-dark.png" in text
+    local = [p for p in re.findall(r'(?:src|srcset)="([^"]+)"|\]\(([^)]+\.(?:svg|png|jpg))\)', text)]
+    paths = [a or b for a, b in local if not (a or b).startswith("http")]
+    assert len(paths) >= 5 and all(Path(p).is_file() for p in paths), [p for p in paths if not Path(p).is_file()]
+
+
+def test_all_three_logo_concepts_are_kept_on_file():
+    from pathlib import Path
+    names = sorted(p.name for p in Path("assets/brand/concepts").glob("*.png"))
+    assert names == ["concept-1-compass.png", "concept-2-buddy.png", "concept-3-monogram.png"]
