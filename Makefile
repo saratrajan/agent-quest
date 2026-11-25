@@ -40,7 +40,8 @@ down:
 test:
 	$(PY) -m pytest -q
 
-# The same lint checks CI runs: Python, then Markdown (needs Node for npx)
+# The same lint checks CI runs: Python, YAML, then Markdown (needs Node for npx)
 lint:
 	$(PY) -m ruff check .
+	$(PY) -m yamllint .
 	npx --yes markdownlint-cli@0.50.1 "**/*.md"

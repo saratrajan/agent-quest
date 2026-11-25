@@ -171,9 +171,10 @@ the same incidents.
 
 ## Checks
 
-Every pull request and every push to `main` runs five checks on GitHub-hosted
-runners: Python lint (ruff), Markdown lint, shell lint (ShellCheck), the unit
-tests, and a secret scan (gitleaks). The jobs are reusable workflows kept in
+Every pull request and every push to `main` runs six checks on GitHub-hosted
+runners: Python lint (ruff), Markdown lint, YAML lint (yamllint), shell lint
+(ShellCheck), the unit tests, and a secret scan (gitleaks). The jobs are
+reusable workflows kept in
 [saratrajan/ci-cd-templates](https://github.com/saratrajan/ci-cd-templates).
 To run the same checks before pushing:
 
