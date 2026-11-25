@@ -178,8 +178,7 @@ tests, and a secret scan (gitleaks). The jobs are reusable workflows kept in
 To run the same checks before pushing:
 
 ```bash
-ruff check .
-npx markdownlint-cli2
+make lint
 make test
 ```
 

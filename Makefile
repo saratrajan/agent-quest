@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: check setup setup-lessons data desk course serve up down test
+.PHONY: check setup setup-lessons data desk course serve up down test lint
 
 # Report what is installed and what is missing, without changing anything
 check:
@@ -39,3 +39,8 @@ down:
 
 test:
 	$(PY) -m pytest -q
+
+# The same lint checks CI runs: Python, then Markdown (needs Node for npx)
+lint:
+	$(PY) -m ruff check .
+	npx --yes markdownlint-cli@0.50.1 "**/*.md"
