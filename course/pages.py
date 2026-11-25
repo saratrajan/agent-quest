@@ -9,10 +9,12 @@ from fastapi.templating import Jinja2Templates
 
 from course.api import Course
 from course.assistant import MILESTONES
+from course.icons import LOCK_ICON, PHASE_ICONS, SESSION_ICONS
 from course.manifest import SECTIONS
 
 HERE = Path(__file__).parent
 templates = Jinja2Templates(directory=str(HERE / "templates"))
+templates.env.globals.update(session_icons=SESSION_ICONS, phase_icons=PHASE_ICONS, lock_icon=LOCK_ICON)
 SERVED = {"concept", "widgets"}
 
 

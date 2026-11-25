@@ -225,3 +225,25 @@ main{max-width:1120px;width:100%;padding:1.5rem 1.5rem 4rem;gap:var(--space-6)}
 .tile.trophy{flex-direction:row;align-items:center;gap:1rem} .tile.trophy div{display:flex;flex-direction:column;gap:.2rem} .tile.trophy b{font-size:1.15rem}
 
 .sidebar .overall{margin:0;padding:.6rem .8rem;border-top:1px solid #23406e;color:#aebfdb;font:500 var(--step-1)/1.3 var(--font-sans)}
+
+/* ---- session and phase icons: navy outline, one accent bar per phase ---- */
+.sicon{--s:72px;position:relative;flex:none;width:var(--s);height:var(--s);box-sizing:border-box;border-radius:calc(var(--s) * .18);background:#fff;border:1.5px solid var(--navy);display:inline-flex}
+.sicon .in{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--s) * .06)}
+.sicon svg{width:48%;height:48%;stroke:var(--navy)}
+.sicon .bar{width:28%;height:max(3px,calc(var(--s) * .05));border-radius:3px;background:#0e7c86}
+.sicon.p2 .bar{background:#c2570a}
+.sicon.locked{border-style:dashed;border-color:#8d9bb3}
+.sicon.locked .in{filter:blur(2px);opacity:.85}
+.sicon.locked .in svg{stroke:#56657d} .sicon.locked .bar{background:#8d9bb3}
+.sicon .lock{position:absolute;inset:0;margin:auto;width:36%;height:36%;border-radius:22%;background:var(--navy);display:grid;place-items:center}
+.sicon .lock svg{width:56%;height:56%;stroke:#fff}
+.sicon.unbuilt{border-style:dashed;border-color:#b3bfd1}
+.sicon.unbuilt svg{stroke:#8d9bb3} .sicon.unbuilt .bar{background:#c3ccda}
+.cover,.cover.c0,.cover.c2,.cover.c3,.cover.c4,.cover.c5{height:auto;padding:.9rem 1rem .2rem;background:none;align-items:flex-start;color:var(--text-muted)}
+.cover .n{font-size:1.5rem;opacity:.55;font-weight:700}
+.card[data-status="locked"] .cover,.card[data-status="not-released"] .cover,.rowitem[data-locked] .cover{background:none}
+.card[data-status="not-released"]{opacity:1}
+.h2-row,.withemblem{display:flex;align-items:center;gap:.7rem}
+.path .sicon{background:#fff}
+.bigicon{display:grid;place-items:center;background:var(--accent-soft);border-radius:12px;min-height:170px}
+.empty .sicon{margin-bottom:.4rem}

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_cover.html" import cover %}
+{% from "_cover.html" import sicon %}
 {% block title %}My progress · Agent Quest{% endblock %}
 {% block main %}
 <h1>My learning progress</h1>
@@ -31,23 +31,23 @@
   <h2>In progress</h2>
   {% if not active %}<div class="empty"><p>Nothing in progress yet.</p>{% if continue %}<p><a class="btn primary" href="/sessions/{{ continue.session }}#step-{{ continue.step_id }}">Start session {{ continue.session }}</a></p>{% endif %}</div>
   {% else %}<div class="rows">{% for s in active %}
-    <div class="rowitem">{{ cover(s.number) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span class="bar"><i style="width: {{ s.pct }}%"></i></span><span>{{ s.pct }}% · {{ s.done }} of {{ s.total }} steps</span></div></div><a class="btn primary" href="/sessions/{{ s.number }}#step-{{ s.next }}">Continue</a></div>
+    <div class="rowitem">{{ sicon(s.number, s.status, 56) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span class="bar"><i style="width: {{ s.pct }}%"></i></span><span>{{ s.pct }}% · {{ s.done }} of {{ s.total }} steps</span></div></div><a class="btn primary" href="/sessions/{{ s.number }}#step-{{ s.next }}">Continue</a></div>
   {% endfor %}</div>{% endif %}
 </section>
-{% if fresh and active %}
+{% if fresh %}
 <section class="stack"><h2>Up next</h2><div class="rows">{% for s in fresh %}
-  <div class="rowitem">{{ cover(s.number) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span>{{ s.total }} steps</span></div></div><a class="btn" href="/sessions/{{ s.number }}">Open</a></div>
+  <div class="rowitem">{{ sicon(s.number, s.status, 56) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span>{{ s.total }} steps</span></div></div><a class="btn" href="/sessions/{{ s.number }}">Open</a></div>
 {% endfor %}</div></section>
 {% endif %}
 {% set shut = rows | selectattr("status", "equalto", "locked") | list %}
 {% if shut %}
 <section class="stack"><h2>Locked</h2><div class="rows">{% for s in shut %}
-  <div class="rowitem" data-locked="{{ s.number }}">{{ cover(s.number) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span>{{ s.total }} steps · finish session {{ s.number - 1 }} to unlock</span></div></div><a class="btn" href="/sessions/{{ s.number }}">Preview</a></div>
+  <div class="rowitem" data-locked="{{ s.number }}">{{ sicon(s.number, s.status, 56) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span>{{ s.total }} steps · finish session {{ s.number - 1 }} to unlock</span></div></div><a class="btn" href="/sessions/{{ s.number }}">Preview</a></div>
 {% endfor %}</div></section>
 {% endif %}
 {% if finished %}
 <section class="stack"><h2>Completed</h2><div class="rows">{% for s in finished %}
-  <div class="rowitem" data-completed="{{ s.number }}">{{ cover(s.number) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span>All {{ s.total }} steps done</span></div></div><a class="btn" href="/sessions/{{ s.number }}">Review</a></div>
+  <div class="rowitem" data-completed="{{ s.number }}">{{ sicon(s.number, s.status, 56) }}<div class="mid"><b>{{ s.title }}</b><div class="line"><span>All {{ s.total }} steps done</span></div></div><a class="btn" href="/sessions/{{ s.number }}">Review</a></div>
 {% endfor %}</div></section>
 {% endif %}
 {% endblock %}

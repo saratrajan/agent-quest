@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_cover.html" import cover %}
+{% from "_cover.html" import sicon %}
 {% block title %}Session {{ s.number }} · {{ s.title }}{% endblock %}
 {% set kinds = {"video": "Watch", "reading": "Read", "concept": "Concept", "exercise": "Build", "experiment": "Experiment", "problem": "Problem", "review": "Design review"} %}
 {% set done_labels = {"video": "Mark as watched", "reading": "Mark as read", "concept": "Mark as read", "experiment": "Mark as done", "problem": "Mark as done", "review": "Mark as done"} %}
@@ -11,6 +11,7 @@
 {% block main %}
 {% if not released %}
 <section class="empty">
+  {{ sicon(s.number, "not-released", 96) }}
   <span class="eyebrow">Session {{ "%02d" % s.number }} · {{ s.phase }}</span>
   <h1>{{ s.title }}</h1>
   <p>{{ s.summary }}</p>
@@ -19,7 +20,7 @@
 </section>
 {% elif locked %}
 <div class="sessionhead">
-  {{ cover(s.number) }}
+  <div class="bigicon">{{ sicon(s.number, "locked", 132) }}</div>
   <div class="info">
     <span class="eyebrow">Session {{ "%02d" % s.number }} · {{ s.phase }}</span>
     <h1>{{ s.title }}</h1>
@@ -35,7 +36,7 @@
 </div>
 {% else %}
 <div class="sessionhead">
-  {{ cover(s.number, play=true) }}
+  <div class="bigicon">{{ sicon(s.number, "", 132) }}</div>
   <div class="info">
     <span class="eyebrow">Session {{ "%02d" % s.number }} · {{ s.phase }}</span>
     <h1>{{ s.title }}</h1>

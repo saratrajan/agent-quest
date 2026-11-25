@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_cover.html" import cover %}
+{% from "_cover.html" import cover, emblem %}
 {% set labels = {"not-started": "Not started", "in-progress": "In progress", "done": "Done", "not-released": "Not yet released", "locked": "Locked"} %}
 {% block main %}
 <section class="hero">
@@ -18,7 +18,7 @@
   <div class="picks">
   {% for s in picks %}
     <a class="card" data-pick="{{ s.number }}" data-status="{{ s.status }}" href="/sessions/{{ s.number }}">
-      {{ cover(s.number) }}
+      {{ cover(s.number, s.status) }}
       <span class="inside">
         <h3>{{ s.title }}</h3>
         <p>{{ s.total }} steps{% if s.includes %} · {{ s.includes[0] }}{% endif %}</p>
@@ -35,7 +35,7 @@
     <div class="sectionhead"><h2>Learning paths</h2></div>
     {% for p in paths %}
     <a class="path" data-path="{{ loop.index }}" href="#phase-{{ loop.index }}">
-      <span class="pathicon" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="#1d6fe0" stroke-width="2.4"><circle cx="9" cy="32" r="4"/><circle cx="22" cy="14" r="4"/><circle cx="35" cy="26" r="4"/><path d="M11.500 28.500 19.500 17.500M25.500 16 31.800 22.800"/></svg></span>
+      {{ emblem(loop.index, 64) }}
       <span class="mid"><b>Phase {{ loop.index }} · {{ p.name }}</b><span>{{ p.blurb }}</span><small>{{ p.count }} sessions · {{ p.built }} built so far</small></span>
       <span class="go" aria-hidden="true">→</span>
     </a>
@@ -72,12 +72,12 @@
 <span id="all-sessions"></span>
 {% for phase, blurb in [("Fundamentals", "How a language model works, built by hand"), ("The agent", "Retrieval, tools, guardrails and measurement on the service desk")] %}
 <section class="phase {{ 'two' if loop.index == 2 }}" id="phase-{{ loop.index }}">
-  <div class="sectionhead"><h2>Phase {{ loop.index }} · {{ phase }}</h2><span class="muted">{{ blurb }}</span></div>
+  <div class="sectionhead"><h2 class="withemblem">{{ emblem(loop.index, 44) }}Phase {{ loop.index }} · {{ phase }}</h2><span class="muted">{{ blurb }}</span></div>
   <ul class="cards">
   {% for s in sessions if s.phase == phase %}
     <li data-session="{{ s.number }}">
     <a class="card" data-status="{{ s.status }}" href="/sessions/{{ s.number }}">
-      {{ cover(s.number) }}
+      {{ cover(s.number, s.status) }}
       <span class="inside">
         <h3>{{ s.title }}</h3>
         <p>{{ s.summary }}</p>

@@ -228,3 +228,44 @@ def test_static_files_carry_a_version_so_browsers_never_show_stale_styles(client
     for name in ["tokens.css", "app.css", "buddy.css", "app.js", "buddy.js"]:
         assert re.search(rf'/static/{re.escape(name)}\?v=\d+"', h), name
     assert client.get("/static/app.css?v=1").status_code == 200
+
+
+# --- session and phase icons (outline with an accent bar)
+
+def test_every_session_has_its_own_icon_on_the_home_page(client):
+    h = client.get("/").text
+    block = h.split('id="all-sessions"')[1]
+    assert sorted(set(int(n) for n in re.findall(r'data-icon="(\d+)"', block))) == list(range(1, 15))
+    paths = re.findall(r'data-icon="(\d+)"[^>]*>.*?<path d="([^"]+)"', block, re.S)
+    assert len({d for _, d in paths}) == 14  # fourteen different drawings
+    assert 'data-emblem="1"' in h and 'data-emblem="2"' in h
+
+
+def test_icon_states_follow_the_session_status(lab_root):
+    s2 = lab_root / "lessons" / "02-next-token"
+    s2.mkdir()
+    (s2 / "session.yaml").write_text(yaml.safe_dump({"steps": [dict(conftest_steps()[0], id="a1")]}))
+    c = TestClient(create_app(data_dir=str(lab_root / "data"), lessons_dir=str(lab_root / "lessons")))
+    block = c.get("/").text.split('id="all-sessions"')[1]
+    icon = lambda n: re.search(rf'<span class="sicon[^"]*" data-icon="{n}".*?</span></span>(?:<span class="lock".*?</span>)?', block, re.S).group(0)
+    assert "locked" not in icon(1) and "unbuilt" not in icon(1) and 'class="lock"' not in icon(1)
+    assert 'class="sicon p1 locked' in icon(2) and 'class="lock"' in icon(2)       # blurred under a lock
+    assert 'class="sicon p1 unbuilt' in icon(3) and 'class="lock"' not in icon(3)  # not built yet: greyed, no lock
+    assert 'class="sicon p2' in icon(6)
+
+
+def test_session_and_progress_pages_use_the_icons(client):
+    assert 'data-icon="1"' in client.get("/sessions/1").text
+    assert 'data-icon="1"' in client.get("/progress").text
+    assert 'data-icon="2"' in client.get("/sessions/2").text  # an unreleased session still shows its icon
+
+
+def test_icon_set_is_complete():
+    from course.icons import PHASE_ICONS, SESSION_ICONS
+    assert sorted(SESSION_ICONS) == list(range(1, 15)) and sorted(PHASE_ICONS) == [1, 2]
+    assert all(d.startswith("M") and '"' not in d and "<" not in d for d in list(SESSION_ICONS.values()) + list(PHASE_ICONS.values()))
+
+
+def conftest_steps():
+    from conftest import STEPS
+    return STEPS
