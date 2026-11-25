@@ -1,0 +1,175 @@
+outcomes:
+- Explain why the newest 100 incidents are held back, and name two ways answers can leak into a result.
+- Write the scoring for triage (exact, within one level, service) and read a confusion table for the direction of the errors.
+- Compute the floors a model must beat, including the process that already exists, before quoting any score.
+- Judge whether a difference between two scores on 100 incidents is real or noise.
+steps:
+- id: eval-concepts
+  kind: video
+  section: Pre-work
+  title: Evaluation concepts in fifteen minutes
+  channel: Hamel Husain
+  youtube_id: 3rlYBCDK0K4
+  start: 0
+  end: 863
+  watch_for:
+  - The difference between a public model benchmark and an evaluation of your own product on your own data.
+  - Error analysis, reading real outputs one by one, as the step that tells you what to measure.
+  - 'The traps listed near the end. Note which ones a score on 100 incidents could fall into.'
+- id: confusion-matrix
+  kind: video
+  section: Pre-work
+  title: The confusion matrix
+  channel: StatQuest with Josh Starmer
+  youtube_id: Kdsp6soqA7o
+  start: 0
+  end: 432
+  watch_for:
+  - 'How to read the table: rows and columns, and what the diagonal means.'
+  - The 3 × 3 example from 4:47. Triage has four priorities, so yours will be 4 × 4.
+  - Why two methods with similar accuracy can make very different kinds of mistake.
+- id: evals-essay
+  kind: reading
+  section: Pre-work
+  title: Your AI product needs evals
+  source: Hamel Husain, 2024 · hamel.dev
+  url: https://hamel.dev/blog/posts/evals/
+  note: 'Read the opening and the section on the first level of evaluation (unit tests: cheap checks with exact answers, run on every change). That level is what you build today. Skim the later levels (human review, online tests) to see where this leads; session 14 returns to them.'
+- id: the-held-back-set
+  kind: concept
+  section: Session
+  title: The task and the held-back set
+  file: concept/01-the-held-back-set.html
+- id: metrics-and-floors
+  kind: concept
+  section: Session
+  title: Three scores, a table and a floor
+  file: concept/02-metrics-and-floors.html
+- id: ex-score
+  kind: exercise
+  section: Session
+  title: Score a set of predictions
+  file: scoring.py
+  test: lessons/06-baseline/test_scoring.py::test_score_on_the_lesson_example lessons/06-baseline/test_scoring.py::test_a_missing_prediction_counts_as_wrong
+  brief: 'Write score: go through the labels, count exact priority matches, matches within one level and service matches, and divide each by the number of labelled incidents. A prediction of None counts as wrong.'
+- id: ex-confusion
+  kind: exercise
+  section: Session
+  title: The confusion table
+  file: scoring.py
+  test: lessons/06-baseline/test_scoring.py::test_confusion_on_the_lesson_example lessons/06-baseline/test_scoring.py::test_confusion_diagonal_adds_up_to_the_exact_matches
+  brief: 'Write confusion: a 4 × 4 table of counts, row for the true priority and column for the predicted one.'
+- id: ex-majority
+  kind: exercise
+  section: Session
+  title: The lazy triager
+  file: scoring.py
+  test: lessons/06-baseline/test_scoring.py::test_majority_baseline_on_the_lesson_example
+  brief: 'Write majority_baseline: the most common priority and the most common service in a set of labels.'
+- id: exp-floor
+  kind: experiment
+  section: Session
+  title: Look around, then find the floor
+  prompt: 'With the service desk running (make desk), the script first shows what a resolved incident carries and what a held-back one does not, then scores two triagers that use no intelligence: one that always gives the most common priority and service from history, and one that keeps whatever priority the reporter chose. Predict both priority scores (exact and within one level) before you run it. Which of the two is the bar your agent has to clear?'
+  command: python lessons/06-baseline/baseline.py --tour --floor
+- id: ex-prompt
+  kind: exercise
+  section: Session
+  title: The prompt
+  file: scoring.py
+  test: lessons/06-baseline/test_scoring.py::test_prompt_carries_the_incident_the_choices_and_the_format lessons/06-baseline/test_scoring.py::test_prompt_changes_with_the_incident_and_the_service_list
+  brief: 'Write build_prompt: the whole request for one incident, with its summary and description, the service ids to choose from, and a request for JSON with the keys "priority" and "service". The wording is yours; the tests only check that the ingredients are there.'
+- id: ex-parse
+  kind: exercise
+  section: Session
+  title: Read the reply safely
+  file: scoring.py
+  test: lessons/06-baseline/test_scoring.py::test_parse_accepts_the_shapes_a_model_really_returns lessons/06-baseline/test_scoring.py::test_parse_returns_none_instead_of_raising
+  brief: 'Write parse_triage: turn the reply into a priority from 1 to 4 and a service name, or return None. It must never raise, whatever the model sends back.'
+- id: exp-baseline
+  kind: experiment
+  section: Session
+  title: The model alone, on all 100
+  prompt: 'Your prompt, your parser and your scoring, run over the 100 held-back incidents with qwen3:4b at temperature 0 (about a minute). In session 5 it got one priority in five right on a handful. Predict the three scores, and predict the shape of the confusion table: which side of the diagonal will the mistakes fall on? Then run it a second time and compare the two results.'
+  command: python lessons/06-baseline/baseline.py --run
+- id: exp-rubric
+  kind: experiment
+  section: Session
+  title: Tell it the rules, then tell it the reporter's answer
+  prompt: 'Two more runs. The first puts the company''s definition of P1 to P4 in front of your prompt. The second also tells the model which priority the reporter chose. Predict the priority score of each. For the second, also predict two counts the script prints: of the incidents where the reporter was wrong, how many does the model correct, and of those where the reporter was right, how many does it break?'
+  command: python lessons/06-baseline/baseline.py --run --rubric && python lessons/06-baseline/baseline.py --run --rubric --reported
+- id: trusting-a-number
+  kind: concept
+  section: Session
+  title: When is a difference real?
+  file: concept/03-trusting-a-number.html
+- id: error-analysis
+  kind: video
+  section: Homework
+  title: Error analysis on a real product
+  channel: Hamel Husain
+  youtube_id: e2i6JbU2R-s
+  start: 0
+  end: 728
+  watch_for:
+  - What reading individual outputs revealed that an overall score did not.
+  - How the problems found were grouped and counted before anything was fixed.
+  - Apply it. Open five incidents your baseline got wrong and write one line on each about why.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: Read a confusion table
+  prompt: 'With the rubric in the prompt, the model produced this table on the 100 held-back incidents (rows are the true priority P1 to P4, columns the predicted one): [1, 0, 1, 0], [4, 2, 0, 0], [36, 8, 7, 0], [14, 12, 15, 0]. Compute priority exact and priority within one level. How many incidents were called more severe than they were, and how many less? What happened to the two real P1s?'
+  answer: 'Exact is the diagonal: 1 + 2 + 7 + 0 = 10, so 10%. Within one adds the cells next to the diagonal: 4 (P2 called P1) + 8 (P3 called P2) + 15 (P4 called P3), with nothing on the other side, so 10 + 27 = 37%. Left of the diagonal, more severe than the truth: 4 + 36 + 8 + 14 + 12 + 15 = 89. Right of it, less severe: 1. That single one is the worst mistake in the table: a real P1 called P3. So the rubric cut the over-calling slightly (from 97 to 89) and in exchange missed one of the only two P1s. An overall score would never show that.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: Six points
+  prompt: Setup A gets the service right on 62 of the 100 held-back incidents and setup B on 68. A colleague says B is better. Compute the standard error of A's score, say whether six points is convincing, and name the one extra count you would ask for.
+  answer: 'SE = √(0.62 × 0.38 ÷ 100) = 0.049, about 5 points, so A''s true value plausibly lies anywhere from 52% to 72%. Six points is well inside that, so by itself it is not convincing. Because both ran on the same incidents, ask for the flips: how many incidents B got right that A got wrong, and the reverse. Seven against one would be persuasive; sixteen against ten is the same six points and much weaker evidence. More incidents would also help: at 400 the standard error halves.'
+- id: p3
+  kind: problem
+  section: Homework
+  points: 3
+  title: Eighty-five per cent
+  prompt: Given the reporter's priority, the model scored 85% exact, a huge jump from 10%. Keeping the reporter's priority without any model also scores 85%. The script reported that the model kept the reporter's priority on 100 of 100 incidents. What is the model's contribution to priority, what would a useful contribution look like in the two counts, and why is this situation easy to miss?
+  answer: 'Its contribution is zero: it corrected 0 of the 15 incidents the reporter got wrong and broke 0 of the 85 the reporter got right, which is what copying looks like. A useful triager corrects some of the 15 while breaking few of the 85: corrected 9, broke 2 would be 92%. It is easy to miss because the headline number improved enormously against the previous model run, and the comparison that matters, against the process that already exists, was never on the same slide. Always include the existing process as a row, and always count flips against it.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: Spot the leak
+  prompt: 'Which of these would make a held-back score untrustworthy, and why? (a) Loading all 500 incidents, with their resolutions, into the store the agent searches. (b) Trying twelve wordings of the prompt, scoring each on the 100 held-back incidents and keeping the best. (c) Putting three resolved incidents from history into the prompt as examples.'
+  answer: '(a) is a direct leak: the agent could retrieve the very incident it is being tested on, or its duplicate, complete with the answer. Only history may be searched. (b) is an indirect leak: the winning wording was selected using the answers, so part of its score is luck that will not carry over to new incidents. Choose wordings on a development slice of history and confirm once on the held-back set. (c) is fine: history is exactly what the agent is allowed to learn from.'
+- id: q1
+  kind: review
+  section: Homework
+  title: Before you trust it
+  question: A team shows you a triage agent and says it is 85% accurate. What do you ask before believing it is useful?
+  model_answer: 'Accurate at what, measured on what, compared with what. What exactly was scored, and are unanswered cases counted as wrong? Is the test set newer than everything the agent learned from, and could any answers have reached it? What do the trivial baselines score: the most common answer, and the current human process? In our own data the current process scores 85% on priority, so 85% could mean no contribution at all. Then the shape of the errors: the confusion table, and specifically how the rare critical incidents fared. Finally how many test cases, so I know how wide the uncertainty is.'
+- id: q2
+  kind: review
+  section: Homework
+  title: Which mistakes matter
+  question: Not all triage errors cost the same. How would you reflect that in how you measure?
+  model_answer: Under-prioritising a real P1 delays the response to an outage; over-prioritising a P4 wakes someone for nothing and, repeated, teaches the team to ignore the agent. I would keep exact accuracy but report alongside it the within-one-level figure, the counts on each side of the diagonal, and the recall on P1 and P2 by themselves, because averages hide rare classes. If one figure is needed for decisions, weight the cells of the confusion table by cost, agreed with the on-call team, and state the weights. I would also treat any missed P1 as something to read individually, not just count.
+- id: q3
+  kind: review
+  section: Homework
+  title: Is 100 enough?
+  question: Your test set has 100 incidents. Is that enough, and what would you do about it?
+  model_answer: 'Enough to tell a large effect from none, not enough to rank similar setups. The standard error near 50% is five points, so differences under about ten are unreliable, and there are only two P1s, so nothing can be said about them statistically. I would use it for coarse decisions, compare setups by counting which incidents flipped, read the rare cases individually, and grow the set over time, especially with real misses from production. I would also keep a separate development set so that the held-back hundred is not worn out by repeated tuning.'
+- id: q4
+  kind: review
+  section: Homework
+  title: Why does it call everything P1?
+  question: Unaided, the model called 78 of 100 incidents P1 when only 2 were. Why, and what does that tell you about what to build next?
+  model_answer: 'The model reads an incident description the way an outsider would: errors, failures and customers affected all sound urgent, and it has no reference point for how urgent they were here. Priority is a local convention, set by this company''s history and thresholds, and none of that is in the model''s weights. A written rubric helped only slightly (3% to 10% exact) because definitions are abstract. What is missing is evidence: similar past incidents and the priority they ended at. That points to retrieval as the next step, and the measurement to run is whether showing the nearest past incidents moves the confusion table back towards the diagonal.'
+- id: q5
+  kind: review
+  section: Homework
+  title: Protecting the test set
+  question: How do you keep an evaluation honest over months of development?
+  model_answer: 'Separate the data by purpose and by time: history for building and retrieval, a development slice for day-to-day tuning, and a held-back set that is newer than both and consulted rarely. Enforce the separation in code, as the service desk does by refusing to serve answers, so that it does not depend on discipline. Log every run with its configuration, including failures, so a best-of-many result is visible as such. Refresh the held-back set with new incidents periodically, and when a number looks too good, look for a leak before celebrating.'

@@ -1,0 +1,27 @@
+<p>You now have scores. Before comparing them, three questions decide whether a difference between two scores is real.</p>
+
+<p><strong>1. How much would this number move by chance?</strong> A hundred incidents is a sample. A different hundred would give a slightly different score even if nothing about the triager changed. For a fraction <span class="math">p</span> measured on <span class="math">n</span> incidents, the usual yardstick is the standard error:</p>
+<p class="math">SE = √( p (1 − p) / n )</p>
+<p>and the true value is very likely within about two standard errors either side.</p>
+<table class="plain">
+  <thead><tr><th>Measured</th><th>On</th><th>Standard error</th><th>Likely range</th></tr></thead>
+  <tbody>
+    <tr><td>50%</td><td>100 incidents</td><td>√(0.5 × 0.5 ÷ 100) = 5 points</td><td>40% to 60%</td></tr>
+    <tr><td>85%</td><td>100 incidents</td><td>√(0.85 × 0.15 ÷ 100) = 3.6 points</td><td>78% to 92%</td></tr>
+    <tr><td>50%</td><td>400 incidents</td><td>2.5 points</td><td>45% to 55%</td></tr>
+  </tbody>
+</table>
+<p>So on this test set, a change of three or four points is noise. A change of fifteen is not. Four times the incidents halves the uncertainty, which is why test sets are worth growing.</p>
+
+<p><strong>2. Which incidents changed?</strong> When two setups are scored on the <em>same</em> incidents, the overall difference hides the useful detail. Count the flips: how many incidents went from wrong to right, and how many from right to wrong. Twelve fixed and two broken is a real improvement. Six fixed and five broken is one point of noise, and reading those eleven incidents will teach you more than the score does. You saw the extreme case in the last experiment: the model that was told the reporter's priority scored exactly what the reporter scored, because it copied the reporter on every one of the hundred. Fixed 0, broke 0. The headline number looked respectable and the model had contributed nothing.</p>
+
+<p><strong>3. Has the test set been used to make decisions?</strong> Each time you try a variation, look at the held-back score and keep the winner, a little of the answers leaks into your choices. Do it thirty times and the best score is partly luck that will not repeat on new incidents. This is <strong>overfitting to the test set</strong>, and it is leakage by a slower route. The habits that prevent it:</p>
+<ul>
+  <li>Develop against history. Hold out the most recent slice of the 400 resolved incidents as a development set, iterate there as often as you like, and run the held-back hundred only to confirm.</li>
+  <li>Decide what you will measure before you run it, and write down every run, including the ones that got worse. The results board keeps them for you.</li>
+  <li>Pin what can vary: the model and its version, temperature 0, the exact prompt. A result you cannot reproduce is an anecdote. Your repeat of the baseline gave identical numbers because all three were pinned.</li>
+</ul>
+
+<p>These three questions are most of what separates a measured claim from a demonstration. From here on, each session changes one thing about the agent and asks them again.</p>
+
+<p class="ref">The standard error above is for a simple proportion. Comparing two setups on the same incidents properly uses a paired test (McNemar's test counts exactly the flips described in question 2); the flip count is the part worth remembering.</p>

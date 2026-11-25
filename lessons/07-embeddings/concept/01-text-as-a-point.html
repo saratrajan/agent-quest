@@ -1,0 +1,25 @@
+<p>Session 6 ended with a clear diagnosis. The model reads an incident like an outsider: it has no idea how serious "refunds are delayed" has been <em>at this company</em>. The remedy is to show it past incidents that resemble the new one. That needs a way to find them, and "resembles" has to mean more than "uses the same words": a ticket that says <em>customers cannot pay</em> should find one that says <em>card authorisations are being declined</em>.</p>
+
+<p>You have already met the tool. In session 2 your model kept a table with one row of numbers per token, and training moved those rows so that tokens used alike ended up with similar rows. That row is an <strong>embedding</strong>. An <strong>embedding model</strong> does the same for a whole text: it reads the text with a transformer like the one you built in session 4 and returns a single vector, a fixed-length list of numbers, for all of it.</p>
+
+<table class="plain">
+  <thead><tr><th></th><th>Session 2's table</th><th>An embedding model</th></tr></thead>
+  <tbody>
+    <tr><td>Input</td><td>one token</td><td>a whole text, up to its context window</td></tr>
+    <tr><td>Output</td><td>one row of the table</td><td>one vector for the text (768 numbers for the model used here)</td></tr>
+    <tr><td>Trained to</td><td>predict the next token</td><td>place texts that mean similar things close together</td></tr>
+  </tbody>
+</table>
+
+<p>The training is the part worth knowing. The model is shown pairs of texts that belong together (a question and its answer, a title and its article) alongside texts that do not, and is adjusted until the pairs point in similar directions and the rest point elsewhere. Nobody decides what each of the 768 numbers means. What comes out is a space in which direction carries meaning, and that is all search needs.</p>
+
+<p>Three practical facts follow, and each one will matter today.</p>
+<ul>
+  <li><strong>You adopt this model; you do not build it.</strong> Training one needs hundreds of millions of text pairs. It runs locally through Ollama like the language model does, and it is small and fast: all 500 incidents embed in a few seconds.</li>
+  <li><strong>Vectors from different models cannot be compared.</strong> Each model has its own space. Change the embedding model and every stored vector must be computed again.</li>
+  <li><strong>What you embed is a design decision.</strong> The vector summarises whatever text you hand over. Embed only the summary line and the detail is lost; embed everything, including the resolution, and the vector describes how an incident ended, which a brand-new incident cannot match. You will measure this in the last experiment.</li>
+</ul>
+
+<p>The model is given. What you write today is the part that uses it: measuring how alike two vectors are, finding the nearest among hundreds, and scoring whether what was found is any good.</p>
+
+<p class="ref">Background: Mikolov et al. (2013) showed that directions in a word-embedding space carry meaning. Reimers and Gurevych (2019), <em>Sentence-BERT</em>, made one vector per sentence practical for search.</p>

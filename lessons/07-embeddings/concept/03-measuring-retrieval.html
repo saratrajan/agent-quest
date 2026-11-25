@@ -1,0 +1,38 @@
+<p>Search returns a ranked list. Before any language model reads that list, measure the list itself. If the right incident is not in it, nothing downstream can recover, and if you only measure the final triage score you will not know whether a bad answer came from bad retrieval or from a model that ignored good retrieval.</p>
+
+<p><strong>Hit rate at k.</strong> For each held-back incident, the answer file lists the resolved incidents that had the same underlying cause. Retrieval scores a hit if at least one of them is among the first <em>k</em> results. Four queries, three results each:</p>
+<table class="plain">
+  <thead><tr><th>Query</th><th>Retrieved, best first</th><th>Truly related</th><th>First hit at rank</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>a, b, c</td><td>a</td><td>1</td></tr>
+    <tr><td>2</td><td>d, e, f</td><td>f, z</td><td>3</td></tr>
+    <tr><td>3</td><td>g, h, i</td><td>x</td><td>never</td></tr>
+    <tr><td>4</td><td>j, k, l</td><td>k</td><td>2</td></tr>
+  </tbody>
+</table>
+<p>Hit rate at 1 is 1 ÷ 4 = 0.25. At 2 it is 0.5. At 3 it is 0.75. The number can only rise with <em>k</em>, and the price of a larger <em>k</em> is more text in the prompt.</p>
+
+<p><strong>Retrieval needs a floor too.</strong> The simplest search ranks by the share of words two texts have in common, with no model at all. Measured on the 100 held-back incidents:</p>
+<table class="plain">
+  <thead><tr><th>Method</th><th>Related incident at rank 1</th><th>In the top 5</th></tr></thead>
+  <tbody>
+    <tr><td>Shared words</td><td>89%</td><td>92%</td></tr>
+    <tr><td>Embeddings</td><td>87%</td><td>92%</td></tr>
+  </tbody>
+</table>
+<p>That is not the result the marketing for vector search would lead you to expect, and it is worth understanding. In this company's tickets the same problem tends to be reported in the same words, often by the same monitoring alert, so counting shared words is already very good. Embeddings earn their place when the wording differs. Your first experiment shows it: search for "we cannot log in on the phone" and the shared-words method returns broken images on cruise pages, while embeddings return sign-in and verification-code incidents, none of which contain the words "log in" or "phone". Real incident queues contain both kinds of query, which is why the next session combines the two methods instead of choosing one.</p>
+
+<p>Notice also that both methods stop at 92%. About one held-back incident in eight has a description like "Something looks wrong since earlier today". No search can find the right history from that, and no amount of tuning will move that ceiling. Knowing where the ceiling is stops you spending a week trying to beat it.</p>
+
+<p><strong>A vote is a triager.</strong> If the five nearest past incidents are mostly P3 on the hotel booking service, a reasonable guess for the new one is P3, hotel booking. Take the most common priority and the most common service among the neighbours and you have a classifier with no language model in it. This is the <strong>k-nearest-neighbours</strong> method, decades old. On the held-back set it scores:</p>
+<table class="plain">
+  <thead><tr><th>Triager</th><th>Priority exact</th><th>Within one</th><th>Service</th></tr></thead>
+  <tbody>
+    <tr><td>Language model alone (session 6)</td><td>3%</td><td>23%</td><td>66%</td></tr>
+    <tr><td>Five nearest incidents vote, no language model</td><td>67%</td><td>97%</td><td>86%</td></tr>
+    <tr><td>Keep the reporter's priority</td><td>85%</td><td>100%</td><td>–</td></tr>
+  </tbody>
+</table>
+<p>A method from the 1950s, running in milliseconds, beats a four-billion-parameter model by twenty points on service and sixty on priority, because it has the one thing the model lacked: this company's history. The lesson is not that language models are unnecessary. It is that the evidence does most of the work, and that every model result from here on has a new floor to clear.</p>
+
+<p class="ref">Hit rate at k is also called recall at k when each query has one relevant item. Fuller treatments also use mean reciprocal rank, which rewards a hit at rank 1 more than a hit at rank 5.</p>

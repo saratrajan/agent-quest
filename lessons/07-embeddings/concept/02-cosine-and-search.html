@@ -1,0 +1,39 @@
+<p>Two vectors are alike when they point the same way. The standard measure is <strong>cosine similarity</strong>: the cosine of the angle between them.</p>
+<p class="math">cos(a, b) = (a · b) / (‖a‖ ‖b‖)</p>
+<p>The top is the dot product, multiplying matching numbers and adding up. The bottom is the two lengths multiplied, where a length is the square root of the sum of squares. The result runs from 1 (same direction) through 0 (unrelated) to −1 (opposite).</p>
+
+<table class="plain">
+  <thead><tr><th>a</th><th>b</th><th>a · b</th><th>Lengths</th><th>Cosine</th></tr></thead>
+  <tbody>
+    <tr><td>[1, 0]</td><td>[1, 1]</td><td>1</td><td>1 and √2</td><td>1 ÷ 1.414 = 0.7071</td></tr>
+    <tr><td>[3, 4]</td><td>[4, 3]</td><td>12 + 12 = 24</td><td>5 and 5</td><td>24 ÷ 25 = 0.96</td></tr>
+    <tr><td>[1, 0]</td><td>[0, 5]</td><td>0</td><td>1 and 5</td><td>0</td></tr>
+  </tbody>
+</table>
+
+<p>Dividing by the lengths is what makes it a measure of direction only. Turn and stretch <em>b</em> below and watch which number responds to which slider.</p>
+<div data-widget="cosine-explorer"></div>
+<script src="/lessons-static/07-embeddings/widgets/cosine-explorer.js"></script>
+
+<p>That suggests a shortcut. If every vector is first scaled to length 1 (<strong>normalised</strong>), the bottom of the formula is 1 and the cosine is simply the dot product. And a dot product against many vectors at once is one matrix multiplication.</p>
+
+<p>So search over a store of vectors is short. Put the stored vectors in a matrix, one per row. Then, for a query vector:</p>
+<ol>
+  <li>normalise the rows of the matrix, and the query;</li>
+  <li>multiply the matrix by the query, giving one cosine per stored vector;</li>
+  <li>sort, and keep the top <em>k</em>.</li>
+</ol>
+
+<p>Worked on four stored vectors and the query [2, 1]:</p>
+<table class="plain">
+  <thead><tr><th>Row</th><th>Stored vector</th><th>Cosine with [2, 1]</th><th>Rank</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>[1, 0]</td><td>2 ÷ (1 × 2.236) = 0.8944</td><td>2nd</td></tr>
+    <tr><td>1</td><td>[0, 1]</td><td>1 ÷ 2.236 = 0.4472</td><td>3rd</td></tr>
+    <tr><td>2</td><td>[1, 1]</td><td>3 ÷ (1.414 × 2.236) = 0.9487</td><td>1st</td></tr>
+    <tr><td>3</td><td>[−1, 0]</td><td>−2 ÷ 2.236 = −0.8944</td><td>4th</td></tr>
+  </tbody>
+</table>
+<p>The top two are rows 2 and 0. Your first tests check exactly these numbers.</p>
+
+<p>Comparing against every stored vector is called <strong>exact</strong> or brute-force search. For 400 incidents of 768 numbers each it is about 300,000 multiplications, which takes well under a millisecond. It stays practical into the hundreds of thousands. Beyond that, stores use an <strong>approximate</strong> index that looks at a small fraction of the vectors and accepts occasionally missing a true neighbour in exchange for speed. That trade is what a vector database manages for you, and it is the subject of the next session. Today you write the exact version, so that you know precisely what the database is approximating.</p>

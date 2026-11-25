@@ -220,6 +220,12 @@ def make_router(tickets: Tickets) -> APIRouter:
             raise HTTPException(404, f"There is no service '{service_id}'")
         return {"result": asdict(found)}
 
+    @r.get("/runbooks")
+    def runbooks(service: str | None = None):
+        found = [{"id": b.id, "title": b.title, "service": b.service} for b in RUNBOOKS.values()
+                 if service is None or b.service == service]
+        return {"result": found, "total": len(found)}
+
     @r.get("/runbooks/{runbook_id}")
     def runbook(runbook_id: str):
         if runbook_id not in RUNBOOKS:

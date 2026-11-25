@@ -1,0 +1,168 @@
+outcomes:
+- Explain tool calling as text in and text out, and say exactly which code runs the tool.
+- Write the tool loop by hand, including clipped results, errors returned to the model and a step limit.
+- Describe a tool to a model with a schema, and say why the description decides whether the tool is used well.
+- Compare native tool calling with constrained output on tokens and time, from your own measurements.
+steps:
+- id: how-tool-calling-works
+  kind: video
+  section: Pre-work
+  title: How tool calling works
+  channel: Tommy Eberle
+  youtube_id: QiRdYCNXAxk
+  start: 0
+  end: 960
+  watch_for:
+  - 'The first three minutes: the model does not run anything; it writes a request that other code carries out.'
+  - How the tool descriptions reach the model. They are part of the prompt.
+  - 'The limitations near the end. Note two that would matter for a triage agent.'
+- id: what-is-tool-calling
+  kind: video
+  section: Pre-work
+  title: What is tool calling?
+  channel: IBM Technology
+  youtube_id: h8gMhXYAv1k
+  start: 0
+  end: 296
+  watch_for:
+  - The round trip drawn on the board. Count how many times the model is called for one tool use.
+  - What is sent along with the user's message on the first call.
+  - 'The two styles described: the application runs the tool, or a library does. Today you write the first.'
+- id: react-paper
+  kind: reading
+  section: Pre-work
+  title: 'ReAct: synergizing reasoning and acting in language models'
+  source: Yao, Zhao, Yu, Du, Shafran, Narasimhan and Cao, 2022 · arXiv:2210.03629
+  url: https://arxiv.org/abs/2210.03629
+  note: 'Read the introduction and study figure 1, which shows the same question attempted four ways: acting only, reasoning only, and the two interleaved. The interleaved pattern, a short thought and then one action, is the one the experiments use. Skim section 2 for how a thought differs from an action: a thought changes nothing in the world.'
+- id: a-model-that-asks
+  kind: concept
+  section: Session
+  title: A model that asks for things
+  file: concept/01-a-model-that-asks.html
+- id: ex-spec
+  kind: exercise
+  section: Session
+  title: Describe a tool
+  file: loop.py
+  test: lessons/09-tool-calling/test_loop.py::test_tool_spec_has_the_shape_models_expect lessons/09-tool-calling/test_loop.py::test_tool_spec_with_several_arguments_and_with_none
+  brief: 'Write tool_spec: build the nested dictionary that describes one tool, with every argument a required string carrying its own description.'
+- id: the-loop
+  kind: concept
+  section: Session
+  title: The loop, and what it costs
+  file: concept/02-the-loop.html
+- id: ex-clip
+  kind: exercise
+  section: Session
+  title: Keep results within a budget
+  file: loop.py
+  test: lessons/09-tool-calling/test_loop.py::test_clip_leaves_short_text_alone_and_marks_what_it_cut
+  brief: 'Write clip: return short text unchanged; cut long text to the budget and add a line saying how many characters were dropped.'
+- id: ex-run-tool
+  kind: exercise
+  section: Session
+  title: Run one call, whatever the model wrote
+  file: loop.py
+  test: lessons/09-tool-calling/test_loop.py::test_run_tool_returns_the_result_as_json lessons/09-tool-calling/test_loop.py::test_run_tool_reports_every_kind_of_bad_call_instead_of_raising lessons/09-tool-calling/test_loop.py::test_run_tool_clips_a_long_result
+  brief: 'Write run_tool: find the function, call it with the model''s arguments and return the result as clipped JSON. An unknown tool, bad arguments or a failing function must come back as {"error": ...}, never as an exception.'
+- id: ex-loop
+  kind: exercise
+  section: Session
+  title: The loop
+  file: loop.py
+  test: lessons/09-tool-calling/test_loop.py::test_loop_returns_at_once_when_the_model_just_answers lessons/09-tool-calling/test_loop.py::test_loop_runs_a_tool_and_feeds_the_result_back lessons/09-tool-calling/test_loop.py::test_loop_handles_several_calls_in_one_turn_and_a_failing_one lessons/09-tool-calling/test_loop.py::test_loop_stops_after_max_steps_and_returns_none
+  brief: 'Write tool_loop: call the model, append its message, return its text if it asked for no tools, otherwise run each call and append the results; give up with None after max_steps turns.'
+- id: exp-one
+  kind: experiment
+  section: Session
+  title: One question, two ways to drive the model
+  prompt: 'With the service desk and Ollama running, your loop answers "Which team owns the payments service, and which services does it depend on?" twice: first with a short thought and a constrained reply, then with the model''s built-in tool calling. Predict how many model turns each takes, and which uses more tokens and time, and by roughly how much. Read the printed conversation: which lines did the model write, and which did your code produce?'
+  command: python lessons/09-tool-calling/explore.py --one && python lessons/09-tool-calling/explore.py --one --native
+- id: exp-chain
+  kind: experiment
+  section: Session
+  title: A question that needs two lookups
+  prompt: 'A held-back incident about cruise deposits: was anything deployed to that service shortly before it opened, and which runbook would apply if a deploy is the cause? Predict which tools the model calls and in what order, and how the tokens read grow from turn to turn. Then judge the answer. One part of it is true and one part is wrong for a reason that is not the model''s fault: find it (the service desk''s runbook pages will help).'
+  command: python lessons/09-tool-calling/explore.py --chain
+- id: exp-break
+  kind: experiment
+  section: Session
+  title: Three ways it goes wrong
+  prompt: 'Three runs: an incident number that does not exist; a question the tools cannot answer exactly ("how many incidents did payments have last year?"); and a tool that always replies "check again", with a limit of three turns. For each, predict what the model does and whether the final output is trustworthy. Pay particular attention to the second.'
+  command: python lessons/09-tool-calling/explore.py --break
+- id: two-ways-to-drive-it
+  kind: concept
+  section: Session
+  title: Two ways to get a structured call, and three ways it fails
+  file: concept/03-two-ways-to-drive-it.html
+- id: structured-output
+  kind: video
+  section: Homework
+  title: How a model is forced to produce valid structure
+  channel: Efficient NLP
+  youtube_id: xpvFinvqRCA
+  start: 0
+  end: 521
+  watch_for:
+  - How a schema is turned into a pattern the output must match.
+  - 'The key step: at each position, tokens that would break the pattern are removed before one is drawn. Compare it with top-k from session 5.'
+  - Why this guarantees the shape of the output but not that its content is right.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: The cost of a long loop
+  prompt: 'An agent''s instructions and tool descriptions take 560 tokens. Each step adds a thought and a call of about 120 tokens, plus the tool result. (a) With results of about 80 tokens, how many tokens are read in total over 3 turns? (b) With results of 1,500 tokens and 6 turns, how many in total? (c) The context window is set to 8,192 tokens. On which turn in (b) does the conversation no longer fit, and what happens then?'
+  answer: '(a) Each step adds 200 tokens. Turns read 560, 760 and 960: 2,280 in total, close to the 2,274 measured in the experiment. (b) Each step adds 1,620. Turns read 560, 2,180, 3,800, 5,420, 7,040 and 8,660: 27,660 in total, twelve times part (a) for twice the turns. (c) Turn 6 needs 8,660 tokens, more than 8,192, before any room for the reply. The runtime cuts the conversation to fit, as in session 5, and nothing reports it. What is cut is the oldest text, which is the instructions. Clip results, cap the turns, and count tokens before each call.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: Rewrite a description
+  prompt: 'A colleague adds this tool: name "search", description "Searches.", one argument "q" described as "query". Name three things the model cannot tell from this, and write a better description and argument description for a tool that finds resolved incidents by keyword.'
+  answer: 'The model cannot tell what is searched (incidents, runbooks, the web), what a good query looks like (a sentence, keywords, an incident number), or what comes back and how much. A better version: name "search_incidents"; description "Search past, resolved incidents by keyword. Returns up to five, each with number, summary, final priority and service. Use one or two distinctive words such as refund or seat map; long phrases match nothing."; argument "query": "One or two keywords to look for in the summary and description." It says what it is for, how to use it well, what it returns and where it fails.'
+- id: p3
+  kind: problem
+  section: Homework
+  points: 3
+  title: Twenty-two
+  prompt: Asked for the exact number of payments incidents last year, the model called search_incidents("payments"), received "total_matching 22", and answered "22". Explain precisely why 22 is not the answer to the question, and give two changes, one to the tools and one to the instructions, that would prevent this.
+  answer: '22 is the number of resolved incidents whose text contains the word "payments", over all time. The question asked for incidents on the payments service in one year. Those differ in three ways: a payments incident need not use the word, another service''s incident may, and no date range was applied. The model had no tool that counts by service and date, so it used the nearest thing and presented the result with a confidence it had not earned. Tools: add a tool that counts incidents by service and date range, and name the field honestly, for example "incidents_containing_these_words". Instructions: say that when no tool can answer a question exactly, the answer is to say so and state what was found. Then test with questions like this one.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: When the loop gives up
+  prompt: Your tool_loop returns None after max_steps turns. Why return None instead of an empty string or the last thing the model said? And why does run_tool return errors as text instead of raising them?
+  answer: None is unmistakable. An empty string or a stray thought could be passed along as if it were an answer, and in triage a missing answer has to be handled as one, by retrying, falling back to a simpler method, or handing over to a person. Errors are returned as text because the model wrote the call and is the only party that can correct it. An exception would end the run on the first misspelt argument; a returned error is information, and in the experiment the model read "There is no incident INC0099999" and answered correctly that it does not exist.
+- id: q1
+  kind: review
+  section: Homework
+  title: Is the model running code?
+  question: A security reviewer asks whether the language model can execute actions in your systems. How do you answer?
+  model_answer: 'No. The model produces text and nothing else. With tool calling, some of that text is a structured request naming a function and its arguments. Our own code receives that request and decides whether and how to carry it out. So the set of possible actions is exactly the set of functions we expose, with exactly the permissions we give them, and every request passes through code where it can be validated, limited, logged, or held for a person to approve. The risk to manage is therefore the tools themselves: what they can do, what input they trust, and what they return. I would show the reviewer the list of tools, which are all read-only here, and the one place where calls are executed.'
+- id: q2
+  kind: review
+  section: Homework
+  title: Designing the tools
+  question: What makes a good set of tools for an agent?
+  model_answer: A small number of tools with clearly different purposes, so the choice between them is easy. Names and descriptions written for a reader who has never seen the system, saying what the tool is for, what a good argument looks like, what comes back, and when not to use it. Arguments that are hard to get wrong, with allowed values listed where there are few. Results that are small, labelled with what they mean, and consistent in shape. Errors that explain how to fix the call. Read-only by default, with anything that changes state separated out and gated. Then I would test them the way I test a prompt, by watching real conversations for wrong tool choices and misread results, because both are usually faults in the tool design.
+- id: q3
+  kind: review
+  section: Homework
+  title: Native or constrained
+  question: When would you use a model's built-in tool calling, and when would you constrain its output to a schema yourself?
+  model_answer: Built-in calling is the default. It is the format the model was trained on, it is the least code, and it handles several calls in one turn. I would constrain the output myself when I need a guarantee that the reply is valid, when I want to control what the model writes before acting, or when the built-in route is too slow or too expensive. In our measurements the same model took 79 seconds with built-in calling, because it reasoned at length before each turn, and under 10 with a short stated thought and a constrained reply, for the same calls and the same answer. Constraint guarantees shape, not sense, and it can cost quality on hard problems, so I would decide per step by measuring both.
+- id: q4
+  kind: review
+  section: Homework
+  title: Keeping the loop under control
+  question: What stops a tool-calling loop from running away with time and money?
+  model_answer: 'Limits at several levels, all enforced in code. A cap on model turns per task, and a distinct result when it is reached. A budget on each tool result, with clipping that is visible to the model. A token count before every call, since each turn re-reads the whole conversation and cost grows roughly with the square of the number of steps. A wall-clock timeout for the whole task. Detection of repeated identical calls. And measurement: turns, tokens and seconds per task are logged, so a change that doubles the average shows up before the bill does.'
+- id: q5
+  kind: review
+  section: Homework
+  title: A wrong answer with a source
+  question: The agent answered "22" with full confidence, citing a tool result. How do you think about that kind of failure?
+  model_answer: 'It is more dangerous than an invented answer because it looks grounded: there was a real tool call and a real number. The fault is spread across the design. The tool returned a count without saying what it counted. No tool could answer the real question, and the instructions did not say what to do in that case. And nothing checked the answer against the question. I would fix the tool''s output labelling, add the missing capability or an explicit way to decline, and add questions like this to the evaluation set. The general lesson is that a tool result is evidence about what the tool did, not about what the user asked.'

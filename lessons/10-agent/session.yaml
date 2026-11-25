@@ -1,0 +1,168 @@
+outcomes:
+- Say when a task needs an agent and when a fixed workflow is the better design, with the costs of each.
+- Assemble a triage agent that investigates with tools and then commits to a structured, checkable answer.
+- Record a trace of every step, and use it to verify what the agent cites and to explain what it did.
+- Compare the agent with the retrieval pipeline on accuracy, time and tokens, from your own runs on 100 incidents.
+steps:
+- id: how-we-build-agents
+  kind: video
+  section: Pre-work
+  title: How we build effective agents
+  channel: AI Engineer (Barry Zhang, Anthropic)
+  youtube_id: D7_ipDqhtwk
+  start: 0
+  end: 909
+  watch_for:
+  - 'The first idea, from 2:31: do not build an agent for everything. Note the checklist for when one is justified.'
+  - 'The second, from 5:36: keep it simple. An agent is a model, tools and a loop.'
+  - 'The third, from 8:01: think from the agent''s point of view. All it knows is what is in its context window.'
+- id: tips-for-agents
+  kind: video
+  section: Pre-work
+  title: Tips for building AI agents
+  channel: Anthropic
+  youtube_id: LP5OCa20Zpg
+  start: 0
+  end: 449
+  watch_for:
+  - How the speakers separate a workflow from an agent. Session 8 was one; today you build the other.
+  - 'The anatomy of an agent prompt, from 2:55. Compare it with the SYSTEM text in agent.py.'
+  - Why tool descriptions deserve as much care as the prompt. You saw the reason in session 9.
+- id: building-effective-agents
+  kind: reading
+  section: Pre-work
+  title: Building effective agents
+  source: Erik Schluntz and Barry Zhang, Anthropic, 2024
+  url: https://www.anthropic.com/engineering/building-effective-agents
+  note: 'Read the opening, the section "When (and when not) to use agents", and the summary. The essay distinguishes workflows, where code decides the steps, from agents, where the model does, and argues for the simplest design that works. Skim the workflow patterns in the middle: the pipeline you built in session 8 is the first of them. The appendix on tool design restates what session 9''s failures taught.'
+- id: workflow-or-agent
+  kind: concept
+  section: Session
+  title: A workflow or an agent?
+  file: concept/01-workflow-or-agent.html
+- id: structure-and-checks
+  kind: concept
+  section: Session
+  title: A structured answer, and what to check
+  file: concept/02-structure-and-checks.html
+- id: ex-schema
+  kind: exercise
+  section: Session
+  title: The shape of the answer
+  file: agent.py
+  test: lessons/10-agent/test_agent.py::test_schema_has_the_six_fields_all_required lessons/10-agent/test_agent.py::test_schema_enums_make_the_answer_checkable
+  brief: 'Write answer_schema: the JSON Schema for the final answer, with priority limited to 1 to 4, service limited to the ids given, and confidence limited to the four allowed phrases.'
+- id: ex-traced
+  kind: exercise
+  section: Session
+  title: Leave a record of every call
+  file: agent.py
+  test: lessons/10-agent/test_agent.py::test_traced_records_each_call_and_returns_the_result_unchanged lessons/10-agent/test_agent.py::test_traced_records_a_failure_and_still_raises_it
+  brief: 'Write traced: wrap each tool so that every call appends its name, arguments, duration and result (or error) to the trace, without changing what the tool returns or raises.'
+- id: ex-check
+  kind: exercise
+  section: Session
+  title: Check the answer against the trace
+  file: agent.py
+  test: lessons/10-agent/test_agent.py::test_check_answer_passes_a_sound_answer_and_flags_a_missing_one lessons/10-agent/test_agent.py::test_check_answer_names_each_problem
+  brief: 'Write check_answer: return a list of problems. A missing answer, a priority out of range, an unknown service, and any cited incident number that never appeared in a tool result.'
+- id: ex-triage
+  kind: exercise
+  section: Session
+  title: Investigate, then commit
+  file: agent.py
+  test: lessons/10-agent/test_agent.py::test_triage_investigates_then_commits lessons/10-agent/test_agent.py::test_triage_still_commits_when_the_loop_runs_out_of_steps lessons/10-agent/test_agent.py::test_triage_passes_on_a_missing_answer_and_records_failed_tools
+  brief: 'Write triage: wrap the tools, start the conversation with the instructions and the ticket, run your tool loop from session 9, then ask for the committed answer and return it with the trace.'
+- id: exp-one
+  kind: experiment
+  section: Session
+  title: One incident, start to finish
+  prompt: 'With the service desk and Ollama running, your agent triages held-back incident INC0010404, "Cruise deposit amount calculated wrongly", reported as P3. Predict which tools it calls and in what order, how many tokens it reads in total, and how long it takes. For comparison, the session 8 pipeline spent about 600 tokens and one second per incident. Read the trace: does each step follow from the one before? Then open data/traces/INC0010404.json and find the same run as data.'
+  command: python lessons/10-agent/run.py --incident INC0010404
+- id: exp-vague
+  kind: experiment
+  section: Session
+  title: A ticket that says nothing, and a note to approve
+  prompt: 'INC0010444 reads "Issue since this morning. Getting complaints on chat. Customers say they cannot finish what they were doing. Details to follow." Predict what the agent does: which tools, whether it finishes within its steps, which service it picks and what confidence it states. The script then shows the work note it would post and asks whether to post it. Decide before you run it what would make you type yes, then run it and decide.'
+  command: python lessons/10-agent/run.py --incident INC0010444 --note
+- id: exp-eval
+  kind: experiment
+  section: Session
+  title: The agent on all 100
+  prompt: 'The full run takes about 40 minutes; add --limit 20 for a first look in eight. Unlike the earlier runs, the agent is shown the priority the reporter chose, as a real triager would be. Reference points on the same incidents: the retrieval pipeline with its anchoring sentence scored 66% on priority and 89% on service at about one second each; the five-neighbour vote 67% and 86%; keeping the reporter''s priority 85%. Predict the agent''s priority and service scores, its seconds per incident, and its average number of tool calls. The script also prints how often the agent overrode the reporter and whether it was right to, and how accuracy varies with the confidence it stated. Predict both.'
+  command: python lessons/10-agent/run.py --eval
+- id: traces-and-cost
+  kind: concept
+  section: Session
+  title: Reading the trace, and what the agent cost
+  file: concept/03-traces-and-cost.html
+- id: look-at-your-data
+  kind: video
+  section: Homework
+  title: Look at your data, and do not overfit to the test set
+  channel: Hamel Husain
+  youtube_id: GL0XhAj5LPE
+  start: 1137
+  end: 1540
+  watch_for:
+  - The case for reading individual outputs before trusting any aggregate. Your traces are exactly this material.
+  - How repeated tuning against one test set wears it out. You have now run the held-back hundred many times.
+  - Apply it. Open three traces from your full run where the priority was wrong, and write one line on each saying where it went wrong.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: What flexibility costs
+  prompt: 'The session 8 pipeline read about 600 tokens and took 0.9 seconds per incident. Your agent, on INC0010404, read 10,458 tokens and took 31.3 seconds. The desk receives 2,000 incidents a month. Compute the monthly tokens read and the monthly model time for each, and the ratio between them. The agent made 4 tool calls; why did it read so much more than four times the pipeline''s prompt?'
+  answer: 'Pipeline: 2,000 × 600 = 1.2 million tokens and 2,000 × 0.9 s = 30 minutes. Agent: 2,000 × 10,458 = 20.9 million tokens and 2,000 × 31.3 s = 17.4 hours. That is 17 times the tokens and 35 times the time. It read so much because every model turn re-reads the whole conversation: the instructions and six tool descriptions (about 600 tokens), then each tool result added so far. Six model turns over a conversation that grows by a tool result each time gives a total that grows roughly with the square of the number of steps, as session 9 showed. Whether that is worth paying depends on what the extra steps buy in accuracy, which the full evaluation measures.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: Run the checks by hand
+  prompt: 'The services are payments, search and identity. The tool results in the trace mentioned INC0010011, INC0010044 and INC0010301. The agent''s answer is: priority 2, service "payment", similar_incidents ["INC0010044", "INC0010310"], confidence "high". What does check_answer return, and which of these could the schema have prevented?'
+  answer: 'It returns ["unknown service", "invented incident INC0010310"]. The priority is in range. "payment" is not one of the ids: the service is "payments". INC0010310 never appeared in a tool result, so the model cannot have learned of it legitimately; it is probably INC0010301 with two digits swapped, which is exactly the kind of error that looks plausible to a reader. The schema would have prevented the first, because service is an enum of the real ids. It cannot prevent the second: any string is a valid list item, and only the trace knows which numbers are real.'
+- id: p3
+  kind: problem
+  section: Homework
+  points: 3
+  title: The vague ticket
+  prompt: On INC0010444, a ticket with no usable detail, the agent searched, checked deploys for the web front end, read the CDN runbook, looked up the search service, read the search re-indexing runbook, ran out of steps, and answered "service search, cause search index lagging, confidence high". The true service was the web front end. Name three distinct things that went wrong, and for each say what in the system should have caught it.
+  answer: 'First, it kept investigating with nothing to investigate: each lookup was chosen from the previous result, not from the ticket, so the path drifted from the web front end to search to a runbook. The step limit caught this, and the "finished" flag recorded it; a run that hits the limit should be treated as low confidence whatever the model says. Second, the cause was taken from the last document it happened to read. Nothing in the ticket supports a lagging search index; the answer should be required to rest on evidence that mentions this incident''s symptoms. Third, it stated high confidence. The instructions offered "not enough information" and it was not used. Stated confidence cannot be trusted by itself, so the system needs signals of its own: retrieved incidents that disagree with each other, a low top similarity score, a vague-ticket pattern, or an unfinished run. The person approving the note is the last defence, and here they should say no.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: What the schema stops
+  prompt: 'For each of these faults in a final answer, say whether your answer_schema makes it impossible: (a) priority 5; (b) service "booking"; (c) a cited incident INC0099999 that does not exist; (d) six first steps; (e) the wrong priority, 2 where the truth is 3; (f) confidence "certain"; (g) a missing probable_cause.'
+  answer: 'Impossible under the schema: (a), because priority is limited to 1, 2, 3, 4; (b), because service is limited to the twelve ids; (d), because first_steps has a maximum of four items; (f), because confidence is limited to four phrases; (g), because every field is required. Not prevented: (c), since any string is acceptable as an incident number, which is why check_answer compares citations with the trace; and (e), since 2 is a valid priority. A schema constrains form. Whether the content is right is a matter for checks where a check is possible, and for evaluation where it is not.'
+- id: q1
+  kind: review
+  section: Homework
+  title: Workflow or agent
+  question: For incident triage, would you ship the fixed retrieval pipeline or the tool-using agent?
+  model_answer: 'It depends on the decision, and the measurements say so. On the 100 held-back incidents the agent got the service right 90% of the time and the retrieval pipeline 89%: no difference, for about twenty times the time (22 seconds against one) and twelve times the tokens. For service alone I would ship the pipeline. On priority the agent scored 81% against the pipeline''s 66%, but that comparison is not like for like, because the agent was also shown the reporter''s priority, and simply keeping the reporter''s priority scores 85%. The useful finding is in the flips: the agent corrected 9 of the reporter''s 15 mistakes and broke 13 of the 85 the reporter had right. It has real signal and uses it too freely. So I would ship the pipeline as the default path, keep the reporter''s priority unless the evidence against it is strong, and call the agent only for the cases that need its extra lookups, such as a suspected deploy. I would also re-run the pipeline with the reporter''s priority in its prompt before concluding anything about priority.'
+- id: q2
+  kind: review
+  section: Homework
+  title: What a trace is for
+  question: What do you record for every agent run, and what do you use it for?
+  model_answer: 'The input, every model turn with its stated thought, every tool call with its arguments, result or error and duration, the final answer, token counts, total time, whether the run finished within its limits, and the versions of the model, prompt and tools. Four uses. Debugging: when an answer is wrong I can see whether the evidence was missing, misleading or ignored. Verification: citations in the answer are checked against what the tools returned. Evaluation: the traces are the raw material for error analysis and for metrics such as tool calls per task. Accountability: when a person asks why the agent said something, there is a record that does not depend on asking the model to explain itself afterwards, which it would do plausibly and unreliably.'
+- id: q3
+  kind: review
+  section: Homework
+  title: What structure buys
+  question: You constrain the agent's final answer to a schema. What does that give you, and what does it not?
+  model_answer: 'It gives a reply that always parses, with every field present and every enumerated value legal, so downstream code needs no defensive parsing and every run can be scored automatically. It removes a whole class of failure at no cost in tokens. It does not make the content true. A valid priority can be the wrong one, a cited incident number can be invented, and a confidence label is only a word. So I pair the schema with checks that use information the model does not control, such as comparing citations with the trace, and with evaluation against known answers. I would also watch for one side effect: forcing a decision into a fixed form can hide uncertainty, which is why the form includes an explicit way to say there is not enough information.'
+- id: q4
+  kind: review
+  section: Homework
+  title: Making confidence mean something
+  question: The agent labels its answers high, medium or low confidence. How do you decide whether to trust the label, and what do you do if you cannot?
+  model_answer: 'By measuring it. Group the answers by stated confidence and compare accuracy across the groups; if the label means something, high should be clearly more accurate than low. In our run the agent labelled all 100 answers high, including the twelve tickets that contain no usable detail, where it got the service right three times. So the label carried no information at all, and offering "not enough information" in the schema was not enough to make the model use it. When the model''s own label cannot be trusted, build the signal from things the model does not control. Here, runs that hit the step limit were right on service 2 times in 6 against 88 in 94 for runs that finished; agreement among the retrieved incidents, the top similarity score, and disagreement with a simple vote are other candidates. Then set the confidence in code from those signals, route the low group to a person, and keep measuring whether the grouping still separates right from wrong.'
+- id: q5
+  kind: review
+  section: Homework
+  title: Where the person goes
+  question: The agent can post a triage note on a ticket only after a person approves it. When would you remove that approval step?
+  model_answer: 'Only for a class of cases where measurement has shown the agent is at least as good as the people it would replace, and where a mistake is cheap to notice and undo. Posting a suggestion clearly marked as automated on a low-priority ticket could be automated early, because the cost of a wrong note is small and a person still acts on it. Changing a ticket''s priority, paging someone or closing a ticket should keep a person in the path much longer. I would get there in stages: first suggestions with approval, tracking how often the approver changes them; then automatic posting for the categories with the highest agreement, with sampling and an easy way to flag a bad one; and never for anything that failed a check or ran out of steps. The approval data is itself an evaluation set, so the step pays for itself while it exists.'

@@ -9,6 +9,7 @@
 set -u
 
 MODEL="qwen3:4b"
+EMBED_MODEL="nomic-embed-text"
 MODE="setup"
 ASSUME_YES=0
 
@@ -96,20 +97,20 @@ else
   fi
 fi
 
-# ---------------------------------------------------------------- PyTorch
-section "2. PyTorch, for the exercises in sessions 2 to 5"
-if [ -n "$PY" ] && "$PY" -c 'import torch' >/dev/null 2>&1; then
-  ok "PyTorch is installed"
+# ---------------------------------------------------------------- lesson libraries
+section "2. Lesson libraries: PyTorch and Chroma, for sessions 2 to 10"
+if [ -n "$PY" ] && "$PY" -c 'import torch, chromadb' >/dev/null 2>&1; then
+  ok "PyTorch and Chroma are installed"
 elif [ -z "$PY" ]; then
-  missing "PyTorch: needs the Python environment first"
+  missing "Lesson libraries: need the Python environment first"
 elif [ "$MODE" = "check" ]; then
-  missing "PyTorch: not installed (about 80 MB; session 1 works without it)"
-  TODO+=("Install PyTorch with: make setup-lessons")
-elif ask "Download and install PyTorch now (about 80 MB)?"; then
-  if "$PY" -m pip install -q -e ".[dev,lessons]" 2>/dev/null; then ok "PyTorch is installed"; else problem "PyTorch did not install. Run 'make setup-lessons' to see why."; TODO+=("Install PyTorch with: make setup-lessons"); fi
+  missing "Lesson libraries: not all installed (about 300 MB; session 1 works without them)"
+  TODO+=("Install the lesson libraries with: make setup-lessons")
+elif ask "Download and install PyTorch and Chroma now (about 300 MB)?"; then
+  if "$PY" -m pip install -q -e ".[dev,lessons]" 2>/dev/null; then ok "PyTorch and Chroma are installed"; else problem "The lesson libraries did not install. Run 'make setup-lessons' to see why."; TODO+=("Install the lesson libraries with: make setup-lessons"); fi
 else
-  missing "PyTorch: skipped. Session 1 works without it."
-  TODO+=("Before session 2, install PyTorch with: make setup-lessons")
+  missing "Lesson libraries: skipped. Session 1 works without them."
+  TODO+=("Before session 2, install the lesson libraries with: make setup-lessons")
 fi
 
 # ---------------------------------------------------------------- data
@@ -130,7 +131,7 @@ OLLAMA_RUNNING=0
 if ! have ollama; then
   missing "Ollama: not installed"
   note "Without it, Buddy still answers questions about your progress, but cannot explain"
-  note "lessons, give hints or quiz you, and session 5's experiments will not run."
+  note "lessons, give hints or quiz you, and the experiments from session 5 onward will not run."
   if [ "$MODE" = "setup" ] && have brew && ask "Install Ollama now with Homebrew?"; then
     if brew install ollama; then ok "Ollama is installed"; else problem "Homebrew could not install Ollama."; fi
   fi
@@ -158,6 +159,14 @@ if have ollama; then
   else
     missing "$MODEL is not downloaded (about 2.5 GB)"
     TODO+=("Download the model with: ollama pull $MODEL")
+  fi
+  if printf '%s\n' "$MODELS" | grep -q "^$EMBED_MODEL"; then
+    ok "$EMBED_MODEL is downloaded"
+  elif [ "$OLLAMA_RUNNING" -eq 1 ] && [ "$MODE" = "setup" ] && ask "Download the embedding model $EMBED_MODEL now (about 270 MB; needed from session 7)?"; then
+    if ollama pull "$EMBED_MODEL"; then ok "$EMBED_MODEL is downloaded"; else problem "The embedding model did not download."; TODO+=("Download the embedding model with: ollama pull $EMBED_MODEL"); fi
+  else
+    missing "$EMBED_MODEL is not downloaded (about 270 MB; needed from session 7)"
+    TODO+=("Before session 7, download the embedding model with: ollama pull $EMBED_MODEL")
   fi
 fi
 

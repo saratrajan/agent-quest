@@ -1,0 +1,187 @@
+outcomes:
+- Explain what an embedding model produces and why direction, not length, carries the meaning.
+- Write cosine similarity and exact nearest-neighbour search, first by hand and then as one matrix product.
+- Measure retrieval by itself with a hit rate at k, against a floor that uses no model.
+- Triage by a vote among the nearest past incidents, and explain why it beats an unaided language model.
+steps:
+- id: word-embeddings-3b1b
+  kind: video
+  section: Pre-work
+  title: Word embeddings, and embeddings beyond words
+  channel: 3Blue1Brown
+  youtube_id: wjZofJX0v4M
+  start: 747
+  end: 1222
+  watch_for:
+  - Words as points in a space with thousands of dimensions, placed by training.
+  - Directions that carry meaning. Note the examples given.
+  - 'The dot product as a measure of how well two vectors align. You compute it by hand today.'
+- id: cosine-similarity
+  kind: video
+  section: Pre-work
+  title: Cosine similarity, clearly explained
+  channel: StatQuest with Josh Starmer
+  youtube_id: e9U0QAFbfLI
+  start: 0
+  end: 613
+  watch_for:
+  - 'The picture from 1:46: two phrases as two arrows, and the angle between them.'
+  - Why repeating a phrase twice does not change its cosine similarity with another.
+  - 'The equation at 6:19. Match each part to a line of the code you will write.'
+- id: what-are-embeddings
+  kind: video
+  section: Pre-work
+  title: What are word embeddings?
+  channel: IBM Technology
+  youtube_id: wgfSDrqYMJ4
+  start: 0
+  end: 518
+  watch_for:
+  - What embeddings are used for. Search is one of several applications listed.
+  - The difference between counting words and learning a representation.
+  - 'The last section, on embeddings that depend on context. A whole incident embedded as one vector builds on this.'
+- id: sbert-paper
+  kind: reading
+  section: Pre-work
+  title: 'Sentence-BERT: sentence embeddings using Siamese BERT-networks'
+  source: Reimers and Gurevych, 2019 · arXiv:1908.10084
+  url: https://arxiv.org/abs/1908.10084
+  note: 'Read the abstract and the introduction. The motivating number is in the abstract: finding the most similar pair among 10,000 sentences took about 65 hours by comparing every pair inside the model, and about 5 seconds once each sentence had its own vector. That is the reason search works on stored vectors. Look at figure 2 for how two texts are compared at search time.'
+- id: text-as-a-point
+  kind: concept
+  section: Session
+  title: A text as a point in space
+  file: concept/01-text-as-a-point.html
+- id: cosine-and-search
+  kind: concept
+  section: Session
+  title: Cosine similarity, and searching everything
+  file: concept/02-cosine-and-search.html
+- id: ex-cosine
+  kind: exercise
+  section: Session
+  title: Cosine similarity by hand
+  file: search.py
+  test: lessons/07-embeddings/test_search.py::test_cosine_on_the_lesson_examples lessons/07-embeddings/test_search.py::test_cosine_ignores_length
+  brief: 'Write cosine_by_hand in plain Python: the dot product divided by the product of the two lengths.'
+- id: ex-normalise
+  kind: exercise
+  section: Session
+  title: Normalise the rows
+  file: search.py
+  test: lessons/07-embeddings/test_search.py::test_normalise_gives_rows_of_length_one_and_keeps_direction
+  brief: 'Write normalise: divide every row of a matrix by its own length.'
+- id: ex-top-k
+  kind: exercise
+  section: Session
+  title: The nearest k
+  file: search.py
+  test: lessons/07-embeddings/test_search.py::test_top_k_on_the_lesson_example lessons/07-embeddings/test_search.py::test_top_k_agrees_with_cosine_by_hand_and_is_sorted lessons/07-embeddings/test_search.py::test_top_k_larger_than_the_store_returns_everything
+  brief: 'Write top_k: normalise the matrix and the query, multiply to get one cosine per row, and return the k best as (row index, score) pairs, best first.'
+- id: exp-neighbours
+  kind: experiment
+  section: Session
+  title: Look at what comes back
+  prompt: 'With the service desk and Ollama running, the script embeds all 500 incidents (a few seconds, once) and shows the five nearest resolved incidents to a held-back one about hotel database latency. Predict how many of the five will be about the same problem, and roughly what the top score will be. Then it searches for "we cannot log in on the phone" two ways: by shared words and by embedding. Predict what each returns. Try a query of your own with --ask.'
+  command: python lessons/07-embeddings/retrieve.py --neighbours INC0010405 && python lessons/07-embeddings/retrieve.py --ask "we cannot log in on the phone"
+- id: ex-hit
+  kind: exercise
+  section: Session
+  title: Score the retrieval
+  file: search.py
+  test: lessons/07-embeddings/test_search.py::test_hit_at_k_on_the_lesson_example
+  brief: 'Write hit_at_k: the fraction of queries with at least one truly related id among their first k results.'
+- id: ex-vote
+  kind: exercise
+  section: Session
+  title: Let the neighbours vote
+  file: search.py
+  test: lessons/07-embeddings/test_search.py::test_vote_takes_the_most_common_and_the_nearest_wins_a_tie
+  brief: 'Write vote: the most common priority and the most common service among the retrieved incidents.'
+- id: exp-measure
+  kind: experiment
+  section: Session
+  title: Embeddings against shared words, and a vote against the model
+  prompt: 'Two measurements on the 100 held-back incidents. First, how often is an incident with the same underlying cause retrieved at rank 1 and in the top 5, by shared words and by embeddings? Predict both pairs of numbers, and which method wins. Second, triage by a vote among the five nearest, with no language model: predict priority exact and service, remembering that the model alone scored 3% and 66%.'
+  command: python lessons/07-embeddings/retrieve.py --measure
+- id: measuring-retrieval
+  kind: concept
+  section: Session
+  title: Measuring retrieval, and a triager with no model
+  file: concept/03-measuring-retrieval.html
+- id: exp-variants
+  kind: experiment
+  section: Session
+  title: What you embed, and whether the score can be trusted
+  prompt: 'The resolved incidents are embedded three ways: the summary line only, summary plus description, and those plus the resolution text. Predict which finds related incidents most often, and how large the differences are. Then the script splits the held-back incidents into three groups by their best similarity score. Predict whether a low top score means the retrieval is more likely to be wrong.'
+  command: python lessons/07-embeddings/retrieve.py --variants
+- id: vector-databases
+  kind: video
+  section: Homework
+  title: What is a vector database?
+  channel: IBM Technology
+  youtube_id: gl1r1XV0SLw
+  start: 0
+  end: 588
+  watch_for:
+  - What is stored alongside each vector.
+  - 'The section on indexing from 7:25: why a database does not compare against every vector.'
+  - What you wrote today that a vector database replaces, and what it adds. Session 8 adopts one.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: Cosine by hand
+  prompt: 'Let a = [2, 1, 0], b = [1, 2, 2] and c = [4, 2, 0]. Compute cos(a, b), cos(a, c) and cos(c, b). Then compute the straight-line distance from a to b and from c to b. What do the two sets of numbers tell you about why search uses cosine?'
+  answer: 'a · b = 2 + 2 + 0 = 4; the lengths are √5 = 2.236 and √9 = 3, so cos(a, b) = 4 ÷ 6.708 = 0.596. c is a doubled, so cos(a, c) = 1 and cos(c, b) = 8 ÷ (4.472 × 3) = 0.596, unchanged. Distances: a to b is √(1 + 1 + 4) = 2.449; c to b is √(9 + 0 + 4) = 3.606. The distance changed although c says exactly what a says, only "louder". A longer text or a repeated phrase can lengthen a vector without changing its meaning, so search compares direction. Once every vector is normalised to length 1 the two measures rank results identically.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: Hit rate from a table
+  prompt: 'Five queries. The rank of the first truly related result for each is: 1, 3, none in the top ten, 2, 6. Compute the hit rate at 1, at 3 and at 5. If each retrieved incident costs about 120 tokens in the prompt, what does going from k = 3 to k = 5 buy, and what does it cost?'
+  answer: 'At 1: only the first query, 1 ÷ 5 = 0.2. At 3: queries one, two and four, 0.6. At 5: still 0.6, because the fifth query''s hit is at rank 6. So moving from 3 to 5 results buys nothing on this set and costs 240 more tokens per request, read on every call. It would take k = 6 to reach 0.8. This is why k is chosen by measurement, not by instinct.'
+- id: p3
+  kind: problem
+  section: Homework
+  points: 3
+  title: A floor that will not move
+  prompt: 'Shared words found a related incident at rank 1 for 89% of the held-back incidents and in the top five for 92%. Embeddings scored 87% and 92%. (a) Why is the floor so strong on this data? (b) Give one kind of query where you would expect embeddings to win clearly. (c) Both stop at 92%. What are the other 8%, and what follows for how you spend your time?'
+  answer: '(a) Recurring problems are reported in recurring words here: the same alert text, the same phrases from support. When a query shares its wording with the thing sought, counting words is nearly perfect. (b) A report in different words from the history, such as a customer''s paraphrase, a different language, or a symptom described where the history describes a cause: "we cannot log in on the phone" matched nothing useful by words and found sign-in incidents by embedding. (c) They are mostly the vague reports, whose text carries no information about the cause. No retrieval method can fix that. The time is better spent on a different signal, for example what else was opened in the same few minutes, or on having the agent say that it does not have enough to go on.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: What the vote is telling you
+  prompt: A vote among the five nearest incidents scores 67% on priority and 86% on service with no language model, against 3% and 66% for the model alone. What does that imply about what the model was missing? And why might the vote still get priority wrong when all five neighbours are about the right problem?
+  answer: 'The model was missing evidence, not ability. The same incidents it mis-triaged become easy once their nearest relatives are in view, so the first thing to give the model is exactly those relatives with their outcomes. The vote goes wrong on priority because incidents with the same cause did not all end at the same priority: one outage was a P2 and its recurrence a P3, depending on how many customers it reached. Five neighbours split three to two, and the majority is sometimes the wrong side. Deciding between them needs the details of this particular ticket, the scale mentioned and the time of day, which is reading, and reading is what a language model is for.'
+- id: q1
+  kind: review
+  section: Homework
+  title: Explain an embedding
+  question: Explain what an embedding is to an engineer who knows databases but not machine learning.
+  model_answer: 'It is a fixed-length array of numbers computed from a piece of text by a model, with the property that texts which mean similar things get arrays that point in similar directions. Think of it as a learned index key for meaning. You compute it once per document and store it beside the row. At query time you compute it for the question and look for the stored keys closest in angle. The model that computes it was trained on a very large number of text pairs to produce that property, and you treat it as a fixed function: same model, same text, same vector. Two consequences for a database person: vectors from different models are incomparable, so changing the model means recomputing the column, and the comparison is a similarity ranking, not an equality match, so results are approximate by nature.'
+- id: q2
+  kind: review
+  section: Homework
+  title: Why cosine?
+  question: Why is cosine similarity the usual measure for text embeddings, and does the choice matter?
+  model_answer: Cosine measures the angle between two vectors and ignores their lengths. For text that is the right invariance, because length tends to reflect things like how long the text is, while direction reflects what it is about. It matters when vectors are not normalised, where a straight-line distance would rank a long relevant document below a short irrelevant one. Once vectors are scaled to unit length, cosine, dot product and straight-line distance all produce the same ranking, so most systems normalise once at write time and use the dot product, which is the cheapest. The practical rule is to use the measure the embedding model was trained with, which its documentation states.
+- id: q3
+  kind: review
+  section: Homework
+  title: Keywords did as well
+  question: Your own measurement shows keyword overlap matching embeddings on this data. Would you still build vector search?
+  model_answer: 'I would keep both, and the measurement tells me how to weight the effort. Keywords are strong here because recurring incidents arrive in recurring words; they are also cheap, exact on identifiers such as error codes and incident numbers, and easy to explain. Embeddings cover the queries keywords cannot: paraphrases, a customer''s description of a problem engineers describe differently, other languages. The held-back set under-represents those because most of it comes from the same reporting channels as the history. So I would combine the two rankings, which costs little, and add paraphrased queries to the evaluation set so the benefit of embeddings is measured and not assumed. I would not present vector search as the reason the system works when the data says otherwise.'
+- id: q4
+  kind: review
+  section: Homework
+  title: Why measure retrieval separately?
+  question: You already have an end-to-end triage score. Why measure retrieval by itself as well?
+  model_answer: Because the end-to-end score cannot tell me where a failure happened. A wrong triage could mean the right incident was never retrieved, or it was retrieved and the model ignored it, or it was retrieved and was misleading. Each has a different fix. Measuring retrieval separately gives an upper bound on what the later stages can achieve, lets me tune retrieval in milliseconds without calling a language model, and shows the ceiling set by the data, which here is 92% because some reports contain no usable information. I would always keep at least two numbers, one for retrieval and one for the final answer, and look at the cases where they disagree.
+- id: q5
+  kind: review
+  section: Homework
+  title: Why use a language model at all?
+  question: A nearest-neighbour vote with no language model gets 86% of services right. Why add a language model on top?
+  model_answer: 'First I would take the result seriously: for the classification part of triage, retrieval plus a vote may be all that is needed, and it is faster, cheaper and easier to audit. A language model earns its place where the vote cannot go. It can weigh the details of this ticket against neighbours that disagree, which is where the vote loses priority accuracy. It can decide that different lookups are needed, such as a recent deploy. It can produce the parts of triage that are not a label: the probable cause, the first steps, the reason. And it can say that the evidence is too thin. So the design question is which decisions go to which component, and the vote becomes both a baseline the model must beat and a cross-check on its answers.'

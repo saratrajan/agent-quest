@@ -1,0 +1,30 @@
+<p>Retrieval gave the model evidence, but you chose the evidence: the same search, the same five incidents, every time. Some triage questions need a different lookup depending on what the ticket says. Was there a deploy just before this started? Who owns the service? What does the runbook say? The next step is to let the model decide what to look up. That is <strong>tool calling</strong>, and it is the mechanism underneath everything called an agent.</p>
+
+<p>One fact removes most of the mystery: <strong>a language model cannot do anything except produce text.</strong> It does not run code, open connections or read databases. Tool calling is a convention layered on top of text:</p>
+<ol>
+  <li>You tell the model which tools exist: a name, a description and the arguments, for each.</li>
+  <li>When it would help, the model writes, instead of an answer, a small structured request: <em>call this tool with these arguments</em>.</li>
+  <li><strong>Your code</strong> notices the request, runs the real function, and adds the result to the conversation as one more message.</li>
+  <li>The model is called again, now with the result in front of it, and either asks for another tool or answers.</li>
+</ol>
+
+<p>Step through a real conversation, recorded on this Mac with the model you have been using. Watch who does what.</p>
+<div data-widget="conversation-stepper"></div>
+<script src="/lessons-static/09-tool-calling/widgets/conversation-stepper.js"></script>
+
+<p>Three things to take from it.</p>
+<ul>
+  <li><strong>The model only ever proposes.</strong> Every action in the world is carried out by code you wrote, which means every action can be checked, limited, logged or refused by code you wrote. Session 11 builds its guardrails on exactly this.</li>
+  <li><strong>The description is the interface.</strong> The model has never seen your functions. All it knows is the text you supply, in a standard form called JSON Schema:
+<pre class="sample">{"type": "function",
+ "function": {"name": "get_service",
+              "description": "Look up one service: owning team, tier, dependencies, runbooks.",
+              "parameters": {"type": "object",
+                             "properties": {"service_id": {"type": "string",
+                                                           "description": "One of: search, payments, ..."}},
+                             "required": ["service_id"]}}}</pre>
+  A vague description produces wrong calls as surely as a vague prompt produces wrong answers.</li>
+  <li><strong>A tool result is just more context.</strong> It lands in the same window as everything else and is read again on every later turn. The bars under the conversation show it: 559 tokens, then 772, then 943.</li>
+</ul>
+
+<p class="ref">The request-and-result convention was popularised by Yao et al. (2022), <em>ReAct: Synergizing Reasoning and Acting in Language Models</em>, this session's reading.</p>

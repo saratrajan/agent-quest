@@ -1,0 +1,31 @@
+<p>Take five incidents, their true answers, and what a triager said:</p>
+<table class="plain">
+  <thead><tr><th>Incident</th><th>Truth</th><th>Triager said</th><th>Priority</th><th>Service</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>P1 payments</td><td>P1 payments</td><td>exact</td><td>right</td></tr>
+    <tr><td>B</td><td>P3 search</td><td>P2 search</td><td>one level out</td><td>right</td></tr>
+    <tr><td>C</td><td>P3 search</td><td>P1 pricing</td><td>two levels out</td><td>wrong</td></tr>
+    <tr><td>D</td><td>P4 loyalty</td><td>P4 loyalty</td><td>exact</td><td>right</td></tr>
+    <tr><td>E</td><td>P2 identity</td><td>a reply that was not valid JSON</td><td>no answer</td><td>no answer</td></tr>
+  </tbody>
+</table>
+
+<p>Three numbers come out of this table, each a fraction of <em>all five</em> incidents:</p>
+<ul>
+  <li><strong>Priority, exact</strong>: A and D, so 2 ÷ 5 = 0.4.</li>
+  <li><strong>Priority, within one level</strong>: A, B and D, so 3 ÷ 5 = 0.6. Calling a P3 a P2 costs someone a few minutes; calling it a P1 pages people at night. The two mistakes should not count the same, and this second number is the simplest way to tell them apart.</li>
+  <li><strong>Service</strong>: A, B and D, so 0.6.</li>
+</ul>
+<p>Incident E counts as wrong three times. An agent that fails to answer has failed, and dividing only by the answers you liked is the second commonest way to flatter a result.</p>
+
+<p>A single accuracy figure hides the <em>direction</em> of the mistakes. A <strong>confusion table</strong> shows it: one row per true priority, one column per predicted priority, each cell a count.</p>
+<div data-widget="confusion-explorer"></div>
+<script src="/lessons-static/06-baseline/widgets/confusion-explorer.js"></script>
+<p>The diagonal is the exact matches. Everything left of the diagonal was called more severe than it was (noise for the on-call team); everything right of it was called less severe (the dangerous side, because a real P1 waits in a queue). Try "Always P3" above and read off its scores before going on.</p>
+
+<p>That preset is the point of this page. On the held-back incidents, 51 of 100 are P3 and 41 are P4. A triager that ignores the ticket and always says P3 is exact 51% of the time and within one level 98% of the time. It is also useless: it never finds a P1. So:</p>
+<ul>
+  <li><strong>A score means nothing without a floor.</strong> A floor, or <strong>baseline</strong>, is the score of something trivially simple. The first one to compute is always "answer with the most common value". If your model scores 55% exact, it has added four points, not fifty-five.</li>
+  <li><strong>The existing process is a baseline too.</strong> Every incident already arrives with a priority chosen by the person who reported it. Keeping that priority costs nothing. Whatever it scores is the real bar for priority, and it is usually much higher than the lazy floor.</li>
+  <li><strong>Averages hide the rare class.</strong> Two of the hundred are P1. A triager can score well overall and miss both. Always look at the rare, costly row of the table by itself.</li>
+</ul>

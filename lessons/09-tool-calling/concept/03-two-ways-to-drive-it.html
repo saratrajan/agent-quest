@@ -1,0 +1,26 @@
+<p>How does the model's text become a structured tool call? There are two routes, and you will use both in the first experiment.</p>
+
+<p><strong>Native tool calling.</strong> Most current models were trained on conversations that include tool descriptions and calls in a fixed text format. The software that runs the model (here, Ollama) writes your descriptions into the prompt in that format, and parses the model's output back into a <code>tool_calls</code> list. You pass <code>tools=</code> and get structure back. This is what you would normally use.</p>
+
+<p><strong>Constrained output.</strong> Session 5 showed that the next token is drawn from a distribution, and that tokens can be filtered before the draw. The same trick can force valid structure: at each step, allow only tokens that keep the output a valid instance of a schema you supply. Describe the tools in the instructions, constrain the reply to <code>{"thought": ..., "tool": ..., "arguments": ...}</code>, and the model cannot produce a malformed call or name a tool that does not exist. The given function <code>agentkit.step</code> does this, then converts the reply into the same message shape native calling produces, so your loop works with either.</p>
+
+<p>Measured on this Mac with the same model and the same two questions:</p>
+<table class="plain">
+  <thead><tr><th>Question</th><th>Route</th><th>Model turns</th><th>Tokens read</th><th>Tokens written</th><th>Time</th></tr></thead>
+  <tbody>
+    <tr><td>Who owns payments?</td><td>constrained, with a short thought</td><td>2</td><td>1,183</td><td>183</td><td>4.4 s</td></tr>
+    <tr><td></td><td>native, reasoning first</td><td>2</td><td>1,612</td><td>444</td><td>9.6 s</td></tr>
+    <tr><td>Deploy before the cruise incident?</td><td>constrained, with a short thought</td><td>3</td><td>2,274</td><td>454</td><td>9.6 s</td></tr>
+    <tr><td></td><td>native, reasoning first</td><td>3</td><td>7,134</td><td>3,572</td><td>78.6 s</td></tr>
+  </tbody>
+</table>
+<p>Both routes made the same calls and reached the same answer. The native route was eight times slower on the second question because this model reasons at length before each turn: 2,235 tokens of private reasoning to decide on one lookup. The constrained route asks for the reasoning as a one- or two-sentence <em>thought</em> inside the reply. That pattern, a brief stated thought followed by one action, is the ReAct pattern, and the thought also makes the trace readable, which you will rely on in session 10.</p>
+
+<p>Neither route is always right. Long reasoning sometimes finds what a short thought misses, and a different model may reason far less. The point is that the route is a choice, with a measurable cost, and you now know what is underneath both.</p>
+
+<p><strong>What goes wrong.</strong> Three failures from the last experiment, each with a general lesson:</p>
+<ul>
+  <li><em>A result misread.</em> Asked for the exact number of payments incidents last year, the model searched for the word "payments", got back "22 matching", and answered "22". The tool counted keyword matches across all time; the model reported it as the answer to a different question. A tool's output must say what it is, and some questions should be refused.</li>
+  <li><em>A gap in the tools.</em> Asked which runbook applies after a bad deploy, the model looked up the cruises service, found no runbooks listed, and said none exists. One does: the rollback runbook is filed under another service. An agent can only find what its tools can reach.</li>
+  <li><em>No way to stop.</em> Given a tool that always says "check again", the model obeyed until the turn limit ended the run.</li>
+</ul>

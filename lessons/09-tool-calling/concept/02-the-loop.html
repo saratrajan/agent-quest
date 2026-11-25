@@ -1,0 +1,31 @@
+<p>The four steps on the previous page repeat until the model answers in words. Written out, the loop is short:</p>
+<pre class="sample">repeat up to max_steps times:
+    reply = ask the model (the whole conversation so far, plus the tool descriptions)
+    add reply to the conversation
+    if reply contains no tool calls:
+        return reply's text                      # the answer
+    for each tool call in reply:
+        result = run it
+        add {"role": "tool", "content": result} to the conversation
+give up                                           # too many steps</pre>
+<p>You write this today. Four details separate a loop that works in a demonstration from one that survives real use.</p>
+
+<p><strong>1. Errors go back to the model as results.</strong> The model writes the call, so the call can be wrong in every way text can be wrong: a tool that does not exist, an argument misspelt, an incident number that was never issued. If your code raises an exception the run dies. If it returns the error as the tool's result, the model reads it and usually corrects itself. In the experiment you will ask for an incident that does not exist and watch the model read "There is no incident INC0099999" and respond sensibly.</p>
+
+<p><strong>2. Results are clipped.</strong> A tool can return anything: one line or a ten-thousand-line log. Whatever it returns is read on that turn and on every turn after it. Clip each result to a budget and say that you did, so the model knows something is missing.</p>
+
+<p><strong>3. Cost grows faster than the number of steps.</strong> Each turn re-reads the whole conversation. If the instructions and tool descriptions are 550 tokens and each step adds about 200, then:</p>
+<table class="plain">
+  <thead><tr><th>Turn</th><th>Tokens read on that turn</th><th>Total read so far</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>550</td><td>550</td></tr>
+    <tr><td>2</td><td>750</td><td>1,300</td></tr>
+    <tr><td>3</td><td>950</td><td>2,250</td></tr>
+    <tr><td>6</td><td>1,550</td><td>6,300</td></tr>
+  </tbody>
+</table>
+<p>Six steps cost not six times one step but more than eleven times. With large tool results the growth is steep, and the conversation can also overflow the context window, where, as session 5 showed, the oldest content is dropped without warning. The oldest content is your instructions.</p>
+
+<p><strong>4. The loop must be able to stop.</strong> Nothing obliges a model to finish. It can call the same tool repeatedly, or keep finding one more thing to check. A hard limit on the number of turns is the minimum. When the limit is reached, return a distinct value (here, <code>None</code>) so the caller can tell "no answer" from "an empty answer" and decide what to do: retry, fall back to a simpler method, or hand the incident to a person.</p>
+
+<p>These are engineering decisions, not model behaviour. Two agents built on the same model differ mostly in how well this loop was written.</p>

@@ -1,0 +1,22 @@
+<p>Session 5 ended with a capable model getting one priority in five right. Before fixing that, you need a way to say <em>how good</em> any triager is, as a number you can quote and defend. This session builds that measuring kit. Every later session is one change to the agent followed by one run of this kit, and the question is always the same: did the number move?</p>
+
+<p>The service desk holds 500 incidents. They are split by time, not at random:</p>
+<table class="plain">
+  <thead><tr><th>Set</th><th>Incidents</th><th>What the agent may do with it</th></tr></thead>
+  <tbody>
+    <tr><td>History</td><td>the oldest 400, all resolved</td><td>anything: read them, search them, learn from them</td></tr>
+    <tr><td>Held back</td><td>the newest 100, shown as the desk's open queue</td><td>see only what a triager would see when the ticket arrives</td></tr>
+  </tbody>
+</table>
+
+<p>For a held-back incident the desk will give you the summary, the description, where the report came from, when it was opened and the priority the reporter chose. It will not give you the final priority, the service, the resolution or the work notes: those are the answers. They live in one file, <code>data/eval_labels.json</code>, which only your scoring code reads.</p>
+
+<p>Two rules make the numbers mean something.</p>
+<ul>
+  <li><strong>The answers never reach the model.</strong> If any answer leaks into a prompt, a search index or a training file, the score measures the leak. This is called <strong>leakage</strong>, and it is the commonest way a good-looking result turns out to be worthless. The desk enforces the rule for you here; in real systems you have to enforce it yourself.</li>
+  <li><strong>The split is by time.</strong> In production the agent always triages an incident that is newer than everything it has seen. A random split would let it learn from incidents that happened after the one being judged, including that incident's own duplicates, and flatter the score.</li>
+</ul>
+
+<p>The task being scored is deliberately narrow: given a new incident, choose its <strong>priority</strong> (P1 to P4) and its <strong>service</strong> (one of twelve). A narrow task with exact answers can be scored by code, with no judgement involved, a hundred times in a few minutes. The agent you finish in session 10 does more than this (similar incidents, a probable cause, first steps), but these two fields stay the backbone of every comparison.</p>
+
+<p>The data is not clean, on purpose. About one reported priority in six is wrong, some incidents are duplicates of others opened minutes earlier, and about one description in eight says nothing useful ("Something looks wrong since earlier today"). A test set with no hard cases would tell you nothing about the cases that matter.</p>

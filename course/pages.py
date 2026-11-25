@@ -15,6 +15,7 @@ from course.manifest import SECTIONS
 HERE = Path(__file__).parent
 templates = Jinja2Templates(directory=str(HERE / "templates"))
 templates.env.globals.update(session_icons=SESSION_ICONS, phase_icons=PHASE_ICONS, lock_icon=LOCK_ICON)
+templates.env.filters["pct"] = lambda x: f"{100 * x:.0f}%" if isinstance(x, (int, float)) and not isinstance(x, bool) else "–"
 SERVED = {"concept", "widgets"}
 
 

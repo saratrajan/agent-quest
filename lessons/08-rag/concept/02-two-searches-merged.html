@@ -1,0 +1,30 @@
+<p>Session 7 measured two ways to search and found them level: shared words and embeddings each found a related incident in the top five about 92% of the time, and they fail on different queries. Production systems use both and merge the results, which is called <strong>hybrid search</strong>. That needs a proper keyword scorer and a way to merge.</p>
+
+<p><strong>BM25: keyword scoring done properly.</strong> Counting shared words treats every word alike. BM25, the standard since the 1990s, adds three corrections. For a query word <em>t</em> that appears <em>f</em> times in a document of length <em>L</em>:</p>
+<p class="math">score += idf(t) × f × (k₁ + 1) / ( f + k₁ × (1 − b + b × L / L<sub>avg</sub>) )</p>
+<p class="math">idf(t) = ln( (N − n + 0.5) / (n + 0.5) + 1 )</p>
+<ul>
+  <li><strong>Rare words count for more.</strong> <em>N</em> is the number of documents and <em>n</em> the number containing the word. "Refund" in 20 of 400 incidents is informative; "error" in 300 is not.</li>
+  <li><strong>Repetition has diminishing returns.</strong> <em>f</em> appears on top and bottom, so the tenth mention adds far less than the first. <em>k₁</em> (usually 1.5) sets how quickly it levels off.</li>
+  <li><strong>Long documents are marked down.</strong> A long text contains more words by chance. <em>b</em> (usually 0.75) sets how strongly length is penalised.</li>
+</ul>
+
+<p>Worked on three tiny documents with the query "card payment". N = 3 and the average length is (3 + 4 + 2) ÷ 3 = 3 words.</p>
+<table class="plain">
+  <thead><tr><th>Document</th><th>Words</th><th>"card"</th><th>"payment"</th><th>Score</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>payment failed card</td><td>0.470 × 1 × 2.5 ÷ 2.5 = 0.470</td><td>0.981 × 1 × 2.5 ÷ 2.5 = 0.981</td><td>1.4508</td></tr>
+    <tr><td>1</td><td>card declined card expired</td><td>0.470 × 2 × 2.5 ÷ 3.875 = 0.607</td><td>absent</td><td>0.6065</td></tr>
+    <tr><td>2</td><td>search slow</td><td>absent</td><td>absent</td><td>0</td></tr>
+  </tbody>
+</table>
+<p>"Card" is in two of three documents, so idf = ln(1.5 ÷ 2.5 + 1) = 0.470. "Payment" is in one: ln(2.5 ÷ 1.5 + 1) = 0.981. Document 1 mentions "card" twice and still scores less than half of document 0, which has both words once.</p>
+
+<p><strong>Reciprocal rank fusion: merging without comparing scores.</strong> A BM25 score of 1.45 and a cosine of 0.87 are on unrelated scales, so they cannot be added. RRF ignores the scores and uses only positions. An item at rank <em>r</em> in a list earns 1 ÷ (k + r); its total across lists decides the merged order.</p>
+<div data-widget="fusion-explorer"></div>
+<script src="/lessons-static/08-rag/widgets/fusion-explorer.js"></script>
+<p>With two lists [a, b, c] and [b, c, d] and k = 60: <em>b</em> earns 1/62 + 1/61 = 0.0325, <em>c</em> earns 1/63 + 1/62 = 0.0320, <em>a</em> earns 1/61 = 0.0164 and <em>d</em> 1/63 = 0.0159. Merged: b, c, a, d. Being found by both searches beats being first in one. The constant k decides how much first place is worth; 60 is the conventional value and rarely needs changing.</p>
+
+<p><strong>Re-ranking: a second, slower opinion.</strong> The first search has to be fast because it looks at everything. A common refinement retrieves a generous shortlist cheaply, then asks a slower, more careful model to reorder just that shortlist. You will measure whether it helps here. It does not always.</p>
+
+<p class="ref">Sources: Robertson and Zaragoza (2009), <em>The Probabilistic Relevance Framework: BM25 and Beyond</em>; Cormack, Clarke and Büttcher (2009), <em>Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods</em>.</p>

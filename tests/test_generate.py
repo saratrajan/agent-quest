@@ -90,3 +90,29 @@ def test_corpus_excludes_eval():
     assert INC[0]["description"] in text and INC[399]["resolution"] in text
     assert all(i["number"] not in text for i in INC[400:])
     assert INC[0]["number"] in text
+
+
+def test_eval_labels_list_the_history_incidents_with_the_same_cause():
+    from servicedesk.generate import eval_labels
+    labels = eval_labels(INC)
+    assert len(labels) == 100 and set(labels) == {i["number"] for i in INC[400:]}
+    for number, label in labels.items():
+        assert label["priority"] == BY[number]["priority"] and label["service"] == BY[number]["service"]
+        assert label["related"], number  # every pattern recurs in history
+        for other in label["related"]:
+            assert BY[other]["split"] == "history" and BY[other]["pattern_id"] == BY[number]["pattern_id"]
+    one = next(iter(labels.values()))
+    assert len(one["related"]) == sum(i["split"] == "history" and i["pattern_id"] == one["pattern_id"] for i in INC)
+
+
+def test_existing_data_gets_the_newer_labels_without_touching_the_database(tmp_path):
+    import json
+    from servicedesk.generate import main
+    main(str(tmp_path))
+    db = tmp_path / "timetravel.db"
+    before = db.stat().st_mtime_ns
+    old = {k: {f: v for f, v in label.items() if f != "related"} for k, label in json.loads((tmp_path / "eval_labels.json").read_text()).items()}
+    (tmp_path / "eval_labels.json").write_text(json.dumps(old))
+    main(str(tmp_path), if_missing=True)
+    assert "related" in json.loads((tmp_path / "eval_labels.json").read_text())["INC0010401"]
+    assert db.stat().st_mtime_ns == before

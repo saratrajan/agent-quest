@@ -1,0 +1,42 @@
+<p>An agent takes a different path for every incident. Without a record of the path you cannot debug it, verify it or defend it. The <strong>trace</strong> is that record: every tool call with its arguments, result and duration, alongside the model's stated thought at each step. This is the run from your first experiment.</p>
+<div data-widget="trace-viewer"></div>
+<script src="/lessons-static/10-agent/widgets/trace-viewer.js"></script>
+
+<p>Three uses, all of which you have now met:</p>
+<ul>
+  <li><strong>Verification.</strong> The answer cited three incidents. The check found all three in the first tool result. A cited number that appears nowhere in the trace was invented.</li>
+  <li><strong>Diagnosis.</strong> On the vague ticket, the trace shows the moment the run left the evidence: after an empty deploy check it began reading runbooks for services nobody had mentioned. Without the trace you would have only a confident wrong answer.</li>
+  <li><strong>Accounting.</strong> The tools took 0.6 of 31 seconds. Nearly all the time, and all the tokens, went to the model re-reading a growing conversation. Faster tools would change nothing; fewer or shorter steps would.</li>
+</ul>
+
+<p><strong>What the agent scored.</strong> Every row is the same 100 held-back incidents.</p>
+<table class="plain">
+  <thead><tr><th>Triager</th><th>Priority exact</th><th>Within one</th><th>Service</th><th>Per incident</th></tr></thead>
+  <tbody>
+    <tr><td>Model alone</td><td>3%</td><td>23%</td><td>66%</td><td>0.5 s, 140 tokens</td></tr>
+    <tr><td>Five nearest vote, no model</td><td>67%</td><td>97%</td><td>86%</td><td>milliseconds</td></tr>
+    <tr><td>Retrieval pipeline, anchored (session 8)</td><td>66%</td><td>91%</td><td>89%</td><td>0.9 s, 600 tokens</td></tr>
+    <tr><td>Agent with tools</td><td>81%</td><td>98%</td><td>90%</td><td>21.8 s, 7,360 tokens</td></tr>
+    <tr><td>Keep the reporter's priority</td><td>85%</td><td>100%</td><td>–</td><td>nothing</td></tr>
+  </tbody>
+</table>
+
+<p>Read it the way session 6 taught, one question at a time.</p>
+
+<p><strong>Service.</strong> 90% against the pipeline's 89%. One point on a hundred incidents is nothing. The extra lookups did not help the model work out which service was affected, and they cost twenty-four times the time and twelve times the tokens.</p>
+
+<p><strong>Priority.</strong> 81% against 66% looks decisive, and is not a fair comparison: the agent was shown the reporter's priority and the pipeline was not. The fair bar is the bottom row. So count the flips, as you did in session 6:</p>
+<table class="plain">
+  <thead><tr><th></th><th>Incidents</th><th>What the agent did</th></tr></thead>
+  <tbody>
+    <tr><td>Reporter was wrong</td><td>15</td><td>corrected 9</td></tr>
+    <tr><td>Reporter was right</td><td>85</td><td>broke 13</td></tr>
+  </tbody>
+</table>
+<p>In session 6 the model given the reporter's priority copied it a hundred times out of a hundred. This agent overrode the reporter 23 times and was right to in 9 of the 15 cases that needed it, and it got both real P1s right. That is genuine signal from the evidence. It also overrode 13 priorities that were correct, so the net effect is four points <em>below</em> doing nothing. The agent knows something the reporter does not and is too ready to act on it. The design question is no longer "is it accurate" but "when should it be allowed to override", which is a rule you can write and measure.</p>
+
+<p><strong>Confidence.</strong> The agent labelled all 100 answers "high", including the twelve tickets with no usable detail, where it named the right service three times. The label carried no information. A signal from the trace did better: runs that finished within their steps were right on service 88 times in 94; runs that hit the limit, 2 in 6. When a model's self-report is uninformative, look for a signal it does not control.</p>
+
+<p><strong>Small failures.</strong> Five tool calls failed because the model guessed a runbook id ("rb-payments") instead of looking one up. Each came back as an error and the run carried on, which is your session 9 loop doing its job. No final answer failed its checks, and 89 answers cited at least one truly related incident.</p>
+
+<p>So: a working agent, usable today, that is better than the pipeline on one decision when given more information, no better on the other, and twenty times the cost. It has an uninformative confidence label, a tendency to override, and no defence yet against a ticket that tries to instruct it. Those are the subjects of session 11.</p>

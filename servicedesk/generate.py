@@ -181,6 +181,22 @@ def export_corpus(incidents: list[dict]) -> str:
     return "\n".join(blocks)
 
 
+def eval_labels(incidents: list[dict]) -> dict:
+    """The answers for the held-back incidents, plus, for each, the history
+    incidents that had the same underlying cause (used to score retrieval)."""
+    by_pattern: dict[str, list[str]] = {}
+    for i in incidents:
+        if i["split"] == "history":
+            by_pattern.setdefault(i["pattern_id"], []).append(i["number"])
+    return {i["number"]: {**{k: i[k] for k in ("priority", "service", "assignment_group", "root_cause_category", "pattern_id")},
+                          "related": by_pattern.get(i["pattern_id"], [])}
+            for i in incidents if i["split"] == "eval"}
+
+
+def _write_labels(out: Path, incidents: list[dict]) -> None:
+    (out / "eval_labels.json").write_text(json.dumps(eval_labels(incidents), indent=2, sort_keys=True))
+
+
 def main(data_dir: str = "data", if_missing: bool = False) -> None:
     from servicedesk import db
 
@@ -188,6 +204,10 @@ def main(data_dir: str = "data", if_missing: bool = False) -> None:
     out.mkdir(parents=True, exist_ok=True)
     if if_missing and (out / "timetravel.db").exists():
         print(f"{out}/timetravel.db already exists; leaving it alone")
+        labels = out / "eval_labels.json"
+        if not labels.exists() or '"related"' not in labels.read_text():
+            _write_labels(out, build_incidents())  # same seed, same incidents: only the answer file is refreshed
+            print(f"Refreshed {labels}")
         return
     incidents, deploys = build_incidents(), build_deploys()
     path = out / "timetravel.db"
@@ -197,9 +217,7 @@ def main(data_dir: str = "data", if_missing: bool = False) -> None:
     db.load(conn, incidents, deploys)
     conn.close()
     (out / "corpus.txt").write_text(export_corpus(incidents))
-    labels = {i["number"]: {k: i[k] for k in ("priority", "service", "assignment_group", "root_cause_category", "pattern_id")}
-              for i in incidents if i["split"] == "eval"}
-    (out / "eval_labels.json").write_text(json.dumps(labels, indent=2, sort_keys=True))
+    _write_labels(out, incidents)
     print(f"Wrote {len(incidents)} incidents and {len(deploys)} deploys to {out}/")
 
 

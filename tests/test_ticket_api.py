@@ -94,6 +94,14 @@ def test_services_and_runbooks(client):
     assert rb["title"] and len(rb["steps"]) >= 3
 
 
+def test_runbooks_can_be_listed_and_filtered_by_service(client):
+    every = client.get("/api/runbooks").json()
+    assert every["total"] == 12 and set(every["result"][0]) == {"id", "title", "service"}
+    identity = client.get("/api/runbooks?service=identity").json()["result"]
+    assert {r["id"] for r in identity} == {"rb-cert-renewal", "rb-identity-token"}
+    assert client.get("/api/runbooks?service=nope").json() == {"result": [], "total": 0}
+
+
 def test_deploys_window(client, generated):
     deploy_related = {p.id for p in PATTERNS if p.deploy_related}
     inc = next(i for i in generated[0] if i["pattern_id"] in deploy_related and i["split"] == "history")

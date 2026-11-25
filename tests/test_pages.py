@@ -94,6 +94,19 @@ def test_results_page_empty_state(client):
     assert r.status_code == 200 and "No runs yet" in r.text
 
 
+def test_results_page_shows_fractions_as_percentages_and_gaps_as_dashes(client, lab_root):
+    import json
+    runs = [{"name": "Keep the reporter's priority", "priority_exact": 0.85, "priority_within_one": 1.0,
+             "service": None, "hit_at_5": None, "seconds": 0},
+            {"name": "Model alone", "priority_exact": 0.305, "priority_within_one": 0.9, "service": 0.62, "seconds": 1.4}]
+    (lab_root / "data" / "results.json").write_text(json.dumps({"runs": runs}))
+    h = client.get("/results").text
+    assert "No runs yet" not in h and "Keep the reporter&#39;s priority" in h
+    for shown in ["85%", "100%", "30%", "90%", "62%", "1.4"]:
+        assert f"<td>{shown}</td>" in h, shown
+    assert h.count("<td>–</td>") == 4  # first row: service, related-in-top-5 and time; second row: related-in-top-5
+
+
 def test_real_session_1_page_renders():
     c = TestClient(create_app(data_dir="/nonexistent-data-dir-for-test", lessons_dir="lessons"))
     h = c.get("/sessions/1").text

@@ -1,0 +1,34 @@
+<p>Session 7 produced an uncomfortable result. A vote among the five nearest past incidents, with no language model involved, triaged better than the language model did alone. The model had ability and no evidence; the vote had evidence and no ability to read. <strong>Retrieval-augmented generation</strong>, RAG, puts the two together: find the relevant passages first, then hand them to the model inside the prompt.</p>
+
+<p>It is an open-book exam. The model is not asked what it remembers about this company's incidents (nothing) but what it concludes from the pages placed in front of it. Two steps, every time:</p>
+<ol>
+  <li><strong>Retrieve.</strong> Search a store of your own documents for the ones most relevant to this request.</li>
+  <li><strong>Generate.</strong> Build a prompt from instructions, the retrieved text and the request, and let the model answer from it.</li>
+</ol>
+
+<p>For triage, the prompt you will build looks like this:</p>
+<pre class="sample">Similar past incidents at this company, most similar first, with the
+priority and service they ended at:
+
+INC0010265 | P2 | hotel-booking | Hotel booking database latency high
+Resolution: Root cause: a reporting query scanned the bookings table. Fix: ...
+
+INC0010072 | P3 | hotel-booking | Slow queries on hotel bookings database
+Resolution: Root cause: ...
+
+Use them as evidence. ...
+
+Summary: Hotel booking database latency high
+Description: Write latency on the hotel bookings database is over 2 seconds ...
+Choose a priority from 1 (critical) to 4 (low), and the affected service ...</pre>
+
+<p>Nothing about the model has changed. No training happened. The knowledge lives in the store, which gives RAG three properties that matter in production:</p>
+<ul>
+  <li><strong>It is current.</strong> An incident resolved a minute ago can be retrieved a minute later. A model's weights know nothing after its training date.</li>
+  <li><strong>It is inspectable.</strong> You can read exactly which passages the model was given. When an answer is wrong you can tell whether the evidence was missing or was ignored, which is why you measured retrieval separately in session 7.</li>
+  <li><strong>It is controllable.</strong> Remove a document from the store and the model can no longer use it. Access rules can be applied at the search step.</li>
+</ul>
+
+<p>The price is paid in the context window. Every retrieved passage is read on every request, so retrieval is a budgeting problem as much as a search problem: the few passages most worth their tokens, laid out so the model can use them, cut off cleanly when the budget runs out. Today you write the four pieces that decide how well that goes: splitting long documents, keyword scoring, merging two rankings, and laying out the evidence. The vector store itself you adopt.</p>
+
+<p class="ref">Source: Lewis et al. (2020), <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em>, which named the technique. The alternative of teaching the model by training on your data is session 13.</p>

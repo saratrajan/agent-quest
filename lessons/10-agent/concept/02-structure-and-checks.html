@@ -1,0 +1,29 @@
+<p>An answer in free text is hard to use. A program cannot reliably pull a priority out of a paragraph, and you cannot score a paragraph against a hundred known answers. So the agent's final turn is constrained to a <strong>schema</strong>, the same mechanism that kept tool calls valid in session 9.</p>
+<pre class="sample">priority            an integer, one of 1, 2, 3, 4
+service             a string, one of the twelve service ids
+similar_incidents   up to three incident numbers
+probable_cause      a string
+first_steps         up to four strings
+confidence          one of: high, medium, low, not enough information</pre>
+
+<p>The restrictions do real work. Because <code>priority</code> must be one of four numbers and <code>service</code> one of twelve ids, the model cannot answer "P0", "urgent" or "the booking system". Session 6's parser, with its careful handling of every malformed reply, is no longer needed at this step: malformed replies cannot be produced.</p>
+
+<p>It is worth being exact about what that guarantees.</p>
+<table class="plain">
+  <thead><tr><th>A schema guarantees</th><th>A schema does not guarantee</th></tr></thead>
+  <tbody>
+    <tr><td>the reply parses</td><td>the priority is the right one</td></tr>
+    <tr><td>every field is present, with the right type</td><td>the probable cause is true</td></tr>
+    <tr><td>the service is one that exists</td><td>the cited incidents exist, or are relevant</td></tr>
+    <tr><td>the confidence is one of four phrases</td><td>the confidence means anything</td></tr>
+  </tbody>
+</table>
+<p>The right-hand column is where the remaining work lies, and some of it can be checked in code.</p>
+
+<p><strong>Invented references.</strong> <code>similar_incidents</code> is a list of strings, and a model asked for incident numbers will produce strings that look like incident numbers whether or not it has seen any. The defence is simple because you hold the trace: collect every incident number that appeared in any tool result, and reject a cited number that is not among them. The model can only have learned of a real incident through a tool. A number that came from nowhere was made up. Your <code>check_answer</code> does this.</p>
+
+<p><strong>A way to say "I do not know".</strong> About one held-back incident in eight contains no usable information. A triager forced to choose will guess, and a confident guess is worse than an honest blank. The fourth confidence value, <em>not enough information</em>, gives the model somewhere to put those. Whether it uses it, and whether its stated confidence tracks its actual accuracy, is something you will measure in the last experiment and not something to assume.</p>
+
+<p><strong>One write action, gated.</strong> Every tool the agent has is read-only. The only way it can change anything is by posting its triage as a work note on the ticket, and that does not happen inside the loop. The program shows you the note and posts it only if you type <em>yes</em>, and it refuses outright if the answer failed its checks. The rule behind this: let a model read freely, and put a person between the model and anything that writes, until measurements have earned it more.</p>
+
+<p>Shape is guaranteed by the schema. References are verified against the trace. Uncertainty has a place to go. Writes need a person. These four are the minimum for letting an agent's output near a real queue. Session 11 attacks each of them.</p>

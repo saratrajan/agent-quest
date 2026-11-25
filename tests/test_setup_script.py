@@ -52,6 +52,27 @@ def test_check_sees_ollama_installed_but_not_running_and_model_missing(tmp_path)
     assert "qwen3:4b" in text and "not downloaded" in text and "2.5 GB" in text
 
 
+def test_check_reports_the_embedding_model_separately(tmp_path):
+    stub(tmp_path, "ollama", 'if [ "$1" = "list" ]; then printf "NAME ID SIZE\\nqwen3:4b abc 2.5GB\\n"; fi')
+    stub(tmp_path, "curl", "exit 0")
+    text = run(["--check"], [tmp_path]).stdout
+    assert "qwen3:4b is downloaded" in text
+    assert "nomic-embed-text is not downloaded" in text and "270 MB" in text and "ollama pull nomic-embed-text" in text
+    stub(tmp_path, "ollama", 'if [ "$1" = "list" ]; then printf "NAME ID SIZE\\nqwen3:4b abc 2.5GB\\nnomic-embed-text:latest def 274MB\\n"; fi')
+    text = run(["--check"], [tmp_path]).stdout
+    assert "nomic-embed-text is downloaded" in text and "ollama pull nomic-embed-text" not in text
+
+
+def test_lesson_libraries_are_named_with_the_sessions_that_need_them(tmp_path):
+    fresh = tmp_path / "fresh"
+    fresh.mkdir()
+    (fresh / "pyproject.toml").write_text("[project]\nname='x'\n")
+    text = SCRIPT.read_text()
+    assert "PyTorch" in text and "Chroma" in text and "import torch, chromadb" in text
+    out = run(["--check"], [tmp_path], cwd=fresh).stdout
+    assert "sessions 2 to 10" in out
+
+
 def test_check_in_a_fresh_copy_says_what_setup_would_do(tmp_path):
     fresh = tmp_path / "fresh"
     fresh.mkdir()

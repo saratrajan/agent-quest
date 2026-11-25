@@ -58,12 +58,12 @@ fall back to the lesson's own text.
 
 ## Roadmap
 
-![Roadmap: sessions 1 to 5 are available now, sessions 6 to 14 are planned, with four milestones](assets/roadmap.svg)
+![Roadmap: sessions 1 to 10 are available now, sessions 11 to 14 are planned, with four milestones](assets/roadmap.svg)
 
 | Phase | Sessions | Status |
 |---|---|---|
 | **1 · Fundamentals** | 1 Tokenization · 2 Predicting the next token · 3 Attention · 4 A tiny GPT · 5 From toy to real | Available now |
-| **2 · The agent** | 6 Baseline and measurement · 7 Embeddings for search · 8 RAG · 9 Tool calling · 10 The agent | Planned |
+| **2 · The agent** | 6 Baseline and measurement · 7 Embeddings for search · 8 RAG · 9 Tool calling · 10 The agent | Available now |
 | **2 · The agent** | 11 Guardrails and failure · 12 Framework port · 13 Fine-tuning versus RAG · 14 Capstone | Planned |
 
 Milestones along the way: **M1** fundamentals done (session 5), **M2** retrieval
@@ -105,10 +105,11 @@ up what it can, and asks before each sizeable download:
 | Step | What it does | Needed for |
 |---|---|---|
 | Python environment | Creates `.venv` and installs the core dependencies | Everything |
-| PyTorch | Asks, then installs it (about 80 MB) | Exercises in sessions 2 to 5 |
+| Lesson libraries | Asks, then installs PyTorch and Chroma (about 300 MB) | Exercises in sessions 2 to 5; the vector database from session 8 |
 | Incident data | Generates the 500 incidents locally | The service desk |
 | Ollama | Checks it is installed and running; offers Homebrew on a Mac, else points to [ollama.com/download](https://ollama.com/download) | Buddy's explanations, hints and quizzes; session 5 |
-| Local model | Asks, then downloads `qwen3:4b` (about 2.5 GB) | The same |
+| Local model | Asks, then downloads `qwen3:4b` (about 2.5 GB) | The same, and every experiment from session 5 onward |
+| Embedding model | Asks, then downloads `nomic-embed-text` (about 270 MB) | Search, from session 7 |
 | Docker | Reports whether it is present | Optional |
 
 To see what is present and what is missing without changing anything, run
@@ -117,7 +118,7 @@ answers yes to every question.
 
 Without Ollama the lab still runs: the service desk, the lessons and Buddy's
 answers about your progress all work. Only Buddy's lesson explanations and
-session 5's experiments need the local model.
+the experiments from session 5 onward need the local model.
 
 Then start both apps:
 
@@ -130,7 +131,7 @@ Other commands:
 ```bash
 make test            # run the tests
 make data            # regenerate the incidents (same data every time)
-make setup-lessons   # install PyTorch later, if you skipped it
+make setup-lessons   # install PyTorch and Chroma later, if you skipped them
 ```
 
 To run one app on its own, use `make desk` or `make course`.
@@ -158,10 +159,15 @@ make down
 
 Reference solutions are in each lesson's `_solution/` folder.
 
-Session 5 talks to a model running locally under [Ollama](https://ollama.com)
-(`qwen3:4b`) and to the service desk, so have both running for its
-experiments. Exercises are run on your machine with `make serve`; the Docker
-image for the course app does not include PyTorch.
+From session 5 the experiments talk to a model running locally under
+[Ollama](https://ollama.com) (`qwen3:4b`) and to the service desk, so have
+both running. Exercises are run on your machine with `make serve`; the Docker
+image for the course app does not include PyTorch or Chroma.
+
+From session 6 every experiment that triages the 100 held-back incidents adds
+a row to the results board in the course app, so you can compare the model
+alone, a vote among similar incidents, retrieval, and the agent with tools on
+the same incidents.
 
 ## Where things are kept
 

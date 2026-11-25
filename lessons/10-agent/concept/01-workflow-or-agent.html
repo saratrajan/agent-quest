@@ -1,0 +1,25 @@
+<p>You now have every part: a measure of triage quality, a search over the company's history, a prompt that uses what search finds, and a loop that lets the model call tools. Today they become one program that takes a new incident and returns a triage a person can act on. First, a distinction that decides how such a system should be built.</p>
+
+<table class="plain">
+  <thead><tr><th></th><th>Workflow</th><th>Agent</th></tr></thead>
+  <tbody>
+    <tr><td>Who decides the steps</td><td>You, in code, in advance</td><td>The model, at run time</td></tr>
+    <tr><td>Example here</td><td>Session 8: always search, always five results, then one model call</td><td>Session 9's loop: the model chooses which tools to call and when to stop</td></tr>
+    <tr><td>Cost and time</td><td>Fixed and small: about 600 tokens and one second</td><td>Variable and large: several model turns, each re-reading the last</td></tr>
+    <tr><td>Predictability</td><td>The same path every time; easy to test</td><td>A different path per incident; needs traces to understand</td></tr>
+    <tr><td>Strength</td><td>Tasks whose steps are known</td><td>Tasks where the right next step depends on what was just found</td></tr>
+  </tbody>
+</table>
+
+<p>Neither is better. An agent is the right choice only when the steps cannot be fixed in advance, because you pay for the flexibility on every request. Triage sits in between. Most incidents need the same thing, the nearest past incidents, and a workflow handles them. Some need more: a deploy to check when the description mentions a release, a dependency to look at when the symptom is on one service and the cause on another, a runbook to find. Whether those extra lookups are worth their cost is the question this session measures.</p>
+
+<p>The agent you assemble has a deliberately plain shape, in two phases:</p>
+<ol>
+  <li><strong>Investigate.</strong> The model runs your tool loop with six read-only tools, for at most six turns, and ends with a short summary in words.</li>
+  <li><strong>Commit.</strong> One more model turn, constrained to a schema, turns everything it found into a fixed set of fields: priority, service, up to three similar incidents, a probable cause, first steps, and a statement of confidence.</li>
+</ol>
+<p>Separating the phases keeps each simple. While investigating, the model thinks about what to look up. When committing, it cannot call tools or wander; it can only fill in the form. And the commit happens even if the investigation ran out of turns, with the result marked as unfinished, because a best answer that says so is more useful to the on-call engineer than silence.</p>
+
+<p>Around the two phases sit three things that make it a system and not a demonstration: a <strong>trace</strong> of every tool call, <strong>checks</strong> on the final answer, and a <strong>person's approval</strong> before anything is written to a ticket. Those are the subject of the next two pages, and they are most of what you write today.</p>
+
+<p class="ref">The workflow and agent distinction, and the advice to prefer the simplest thing that works, follow Anthropic's essay <em>Building effective agents</em> (2024), this session's reading.</p>

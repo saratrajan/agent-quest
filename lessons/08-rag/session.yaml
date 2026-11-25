@@ -1,0 +1,180 @@
+outcomes:
+- Describe RAG as retrieve-then-generate, and say what it offers that the model's own weights cannot.
+- Implement BM25 keyword scoring, reciprocal rank fusion and chunking, and explain what each corrects.
+- Adopt a vector database and say what it adds to a hand-written search, and at what size it starts to matter.
+- Measure every retrieval change, and report honestly when a fashionable technique makes no difference.
+steps:
+- id: what-is-rag
+  kind: video
+  section: Pre-work
+  title: What is retrieval-augmented generation?
+  channel: IBM Technology
+  youtube_id: T-D1OfcDW1M
+  start: 0
+  end: 395
+  watch_for:
+  - The two problems named at 1:22. You met both in sessions 5 and 6.
+  - Where the retrieved content goes. It is added to the prompt; the model is not changed.
+  - What the model is told to do when the retrieved content does not contain the answer.
+- id: rag-from-scratch
+  kind: video
+  section: Pre-work
+  title: 'RAG from scratch: overview'
+  channel: LangChain
+  youtube_id: wd7TZ4w1mSw
+  start: 0
+  end: 313
+  watch_for:
+  - 'The three stages drawn at the start: indexing, retrieval, generation.'
+  - How little code the basic version needs once a store exists.
+  - 'Which stage each piece you write today belongs to: chunking, BM25, fusion, laying out the context.'
+- id: bm25-and-hybrid
+  kind: video
+  section: Pre-work
+  title: BM25 and hybrid search
+  channel: Tejas Kumar
+  youtube_id: lD3_VF5bmWg
+  start: 0
+  end: 585
+  watch_for:
+  - What keyword search gets right that vector search misses, and the reverse.
+  - 'Hybrid search from 3:04: two result lists, merged.'
+  - 'Re-ranking from 4:10. Today you measure whether it helps on your data.'
+- id: rag-paper
+  kind: reading
+  section: Pre-work
+  title: Retrieval-augmented generation for knowledge-intensive NLP tasks
+  source: Lewis, Perez, Piktus and others, 2020 · arXiv:2005.11401
+  url: https://arxiv.org/abs/2005.11401
+  note: 'Read the abstract and the introduction, and study figure 1. The paper''s framing is worth keeping: a model has "parametric" memory in its weights and can be given "non-parametric" memory in a searchable store. Notice the two benefits claimed in the introduction, that the store can be updated without retraining and that the sources of an answer can be inspected.'
+- id: retrieve-then-read
+  kind: concept
+  section: Session
+  title: Retrieve, then read
+  file: concept/01-retrieve-then-read.html
+- id: exp-adopt
+  kind: experiment
+  section: Session
+  title: Adopt the vector database
+  prompt: 'With the service desk and Ollama running, the script loads the 400 resolved incidents into Chroma, then runs the same 100 searches through Chroma and through your own top_k from session 7. Predict which is faster per search and by how much, and out of the 500 results (100 searches, five each) how many the two will have in common. Then open lessons/08-rag/store.py and find the lines that create the collection, add to it and query it.'
+  command: python lessons/08-rag/rag.py --adopt
+- id: two-searches-merged
+  kind: concept
+  section: Session
+  title: Keyword scoring, and merging two rankings
+  file: concept/02-two-searches-merged.html
+- id: ex-bm25
+  kind: exercise
+  section: Session
+  title: BM25
+  file: retrieval.py
+  test: lessons/08-rag/test_retrieval.py::test_bm25_on_the_lesson_example lessons/08-rag/test_retrieval.py::test_bm25_rewards_rare_words_and_discounts_repetition_and_length
+  brief: 'Write bm25_scores: for each document, add up over the query words the idf of the word times its damped, length-adjusted count. The formula is in the docstring.'
+- id: ex-rrf
+  kind: exercise
+  section: Session
+  title: Reciprocal rank fusion
+  file: retrieval.py
+  test: lessons/08-rag/test_retrieval.py::test_rrf_on_the_lesson_example lessons/08-rag/test_retrieval.py::test_rrf_with_one_list_keeps_its_order_and_agreement_beats_one_first_place
+  brief: 'Write rrf: each id earns 1 / (k + position) from every list it appears in; return the ids by total, highest first.'
+- id: ex-chunk
+  kind: exercise
+  section: Session
+  title: Chunk a long text
+  file: retrieval.py
+  test: lessons/08-rag/test_retrieval.py::test_chunk_on_the_lesson_example lessons/08-rag/test_retrieval.py::test_chunk_edges lessons/08-rag/test_retrieval.py::test_chunks_cover_every_word_and_overlap_as_asked
+  brief: 'Write chunk: windows of at most size words, each starting size minus overlap words after the last, ending cleanly at the end of the text.'
+- id: exp-retrieval
+  kind: experiment
+  section: Session
+  title: Six ways to retrieve, measured
+  prompt: 'The script measures how often a related incident is retrieved at rank 1 and in the top 5 for: vector search, your BM25, your hybrid of the two, and the hybrid re-ranked by the language model (the slow row: about two minutes). Then it indexes the full ticket threads, whole and in chunks made by your chunk function. Session 7 measured 87% and 92% for embeddings. Predict, for each of the six rows, whether it will be better, worse or about the same, and by how much.'
+  command: python lessons/08-rag/rag.py --retrieval
+- id: ex-context
+  kind: exercise
+  section: Session
+  title: Lay out the evidence within a budget
+  file: retrieval.py
+  test: lessons/08-rag/test_retrieval.py::test_context_lists_each_incident_with_its_outcome lessons/08-rag/test_retrieval.py::test_context_stays_within_the_budget_without_cutting_a_block
+  brief: 'Write build_context: one two-line block per retrieved incident, best first, stopping before the block that would exceed the character budget.'
+- id: exp-run
+  kind: experiment
+  section: Session
+  title: RAG triage on all 100
+  prompt: 'Your hybrid search finds five past incidents, your build_context lays them out, and your session 6 prompt follows. Predict priority exact and service, with three reference points: the model alone scored 3% and 66%, the five-neighbour vote 67% and 86%, and keeping the reporter''s priority 85%. The second run adds one sentence telling the model to start from the priority most of the neighbours ended at. Predict what it changes, and look at the P1 row of both tables. Optional: add --k 1 or --k 10 to the first command and predict those too.'
+  command: python lessons/08-rag/rag.py --run && python lessons/08-rag/rag.py --run --anchor
+- id: chunks-stores-results
+  kind: concept
+  section: Session
+  title: Chunks, the database, and what the measurements said
+  file: concept/03-chunks-stores-results.html
+- id: knowledge-and-working-memory
+  kind: video
+  section: Homework
+  title: Hallucinations, tool use, and knowledge against working memory
+  channel: Andrej Karpathy
+  youtube_id: 7xTGNNLPyMI
+  start: 4832
+  end: 6106
+  watch_for:
+  - 'The distinction between what is in the parameters (a vague recollection) and what is in the context window (working memory). RAG moves knowledge from the first to the second.'
+  - How a model can be given the means to look something up instead of guessing.
+  - Tool use, which is the next session. Retrieval today was a lookup you chose; next the model chooses.
+- id: p1
+  kind: problem
+  section: Homework
+  points: 3
+  title: BM25 by hand
+  prompt: 'Three documents: d0 = "refund late", d1 = "refund refund queue slow", d2 = "login error page down". Score the query "refund" against each with k₁ = 1.5 and b = 0.75. Which wins, and what does that show about repetition and length?'
+  answer: 'N = 3 and "refund" is in 2 documents, so idf = ln(1.5 ÷ 2.5 + 1) = ln 1.6 = 0.470. The average length is (2 + 4 + 4) ÷ 3 = 3.33. For d0, f = 1 and L = 2: the bottom is 1 + 1.5 × (0.25 + 0.75 × 2 ÷ 3.33) = 2.05, so the score is 0.470 × 2.5 ÷ 2.05 = 0.573. For d1, f = 2 and L = 4: the bottom is 2 + 1.5 × (0.25 + 0.75 × 4 ÷ 3.33) = 3.725, so the score is 0.470 × 5 ÷ 3.725 = 0.631. d2 scores 0. d1 wins, but only just: twice the mentions earned about 10% more, because repetition is damped and the document is longer than average. Plain word counting would have scored d1 twice as high as d0.'
+- id: p2
+  kind: problem
+  section: Homework
+  points: 2
+  title: Fuse two rankings
+  prompt: 'Keyword search returns [x, y, z] and vector search returns [z, x, w]. Merge them with reciprocal rank fusion at k = 60, showing each total. Why can the BM25 scores and cosine scores not simply be added instead?'
+  answer: 'x earns 1/61 + 1/62 = 0.0325; z earns 1/63 + 1/61 = 0.0323; y earns 1/62 = 0.0161; w earns 1/63 = 0.0159. Merged: x, z, y, w. The two items found by both searches lead, and x edges z because its two positions (first and second) are slightly better than z''s (third and first). The raw scores cannot be added because they are on unrelated scales: BM25 is unbounded and depends on the collection, cosine lies between −1 and 1 and in practice in a narrow band near the top. Adding them would let whichever has the larger numbers decide. Ranks are comparable; scores are not.'
+- id: p3
+  kind: problem
+  section: Homework
+  points: 3
+  title: How many neighbours?
+  prompt: 'With 1 retrieved incident the model scored 20% on priority and 91% on service, using 254 prompt tokens. With 5: 54% and 88%, 559 tokens. With 10: 54% and 90%, 941 tokens. Why is one neighbour enough for service and not for priority? Which k would you run in production, and what is your argument?'
+  answer: 'Service is nearly a property of the problem: every past incident with this cause was on the same service, so a single good neighbour settles it. Priority varies between incidents with the same cause, typically across two adjacent levels, so one example is one draw from a distribution, and the model, which leans towards severe, is not pulled back by it. Several neighbours show where the weight lies. I would run k = 5. Ten costs 68% more tokens on every request for no measurable gain on priority and two points on service, which is inside the noise for 100 incidents. I would revisit it if the incident history became more varied.'
+- id: p4
+  kind: problem
+  section: Homework
+  points: 2
+  title: One sentence
+  prompt: 'Adding one sentence to the prompt ("start from the priority most of the similar incidents ended at...") raised priority exact from 54% to 66% and within-one from 75% to 91%. In the confusion table, real P1s called P1 went from 2 of 2 to 1 of 2; the other was called P3. Would you ship the sentence? What else would you want to know?'
+  answer: 'Not on these numbers alone. The average improved a great deal, mostly by stopping P3 and P4 incidents being called P1, which is real value: far fewer false alarms. But the cost landed on the rarest and most expensive class. The anchoring sentence pulls every answer towards the neighbours'' usual priority, and a true P1 whose neighbours were mostly P3 gets pulled down with the rest. With two P1s in the test set nothing can be concluded statistically, so I would read that incident and its retrieved neighbours, gather more P1 and P2 examples for the evaluation, and look for a rule that keeps the gain without the miss, such as never lowering a priority below what the reporter chose without flagging it for a person. An improvement in the average that makes the worst case worse is a trade, and it has to be made deliberately.'
+- id: q1
+  kind: review
+  section: Homework
+  title: Explain RAG, and when to use it
+  question: Explain retrieval-augmented generation, and say when you would choose it over fine-tuning the model on your data.
+  model_answer: 'RAG is two steps: search your own documents for the passages relevant to a request, then put them in the prompt so the model answers from them. The model is unchanged; the knowledge lives in a store you control. I choose it when the knowledge changes often, when answers must be traceable to a source, when access to information must be controlled per user, or when the volume of facts is large. All of those hold for incident history. Fine-tuning changes the model''s weights and suits a different need: teaching a behaviour, a format or a domain''s vocabulary that is stable and that examples in the prompt cannot convey compactly. They are not rivals; a fine-tuned model can still be given retrieved evidence. I would start with RAG because it is cheaper to build, immediate to update and easy to inspect, and fine-tune only when measurement shows a gap that retrieval cannot close.'
+- id: q2
+  kind: review
+  section: Homework
+  title: Choosing a chunk size
+  question: How do you decide how to chunk documents for retrieval?
+  model_answer: By the shape of the documents and the questions, then by measurement. A chunk should hold one answerable unit of meaning, so I start from natural boundaries such as sections, paragraphs, or one work note, before falling back to fixed windows with some overlap. Small chunks match a specific question sharply and may lack the context to be useful once retrieved; large ones carry context and match vaguely. I pick two or three candidate sizes and measure retrieval quality on real queries. On our incident threads chunking made no measurable difference, because the identifying information is in the first two lines, so the simplest scheme, one vector per incident, was the right one. I would expect a different answer for long runbooks or design documents.
+- id: q3
+  kind: review
+  section: Homework
+  title: Re-ranking made it worse
+  question: You added a re-ranking step and retrieval quality went down slightly. How do you explain that, and would you ever use re-ranking?
+  model_answer: 'First, a three-point drop on a hundred queries is within noise, so the accurate statement is that it did not help. It did not help for two reasons. The first-stage ranking was already near the ceiling the data allows, so there was almost nothing to gain. And the re-ranker was a small general-purpose model asked to order ten similar-looking tickets, a task it was never trained for, at the cost of an extra model call per query. Re-ranking earns its place when the first stage has good recall but poor ordering, for example a relevant document reliably in the top fifty but rarely in the top five, and when the re-ranker is a model trained for relevance. I would measure recall at 50 against recall at 5 first; if they are close, there is nothing for a re-ranker to do.'
+- id: q4
+  kind: review
+  section: Homework
+  title: Beaten by a vote
+  question: With retrieved evidence in the prompt, the language model scored 54% on priority; a majority vote over the same evidence scored 67%. What do you conclude?
+  model_answer: 'That giving a model the evidence is not the same as the model using it well. The retrieval was identical, so the gap is in how the evidence was read: the model still leaned towards severe, calling twenty P3 incidents P1 that their neighbours would have settled. One sentence telling it to start from the neighbours'' usual priority closed the gap, which shows it was an instruction problem and not a capability problem. More broadly, a simple method is the benchmark any model-based step has to beat, and where it does not, the options are to fix the prompt, to use the simple method for that decision, or to use it as a cross-check. I would keep the vote in the system either way, as a baseline in every evaluation and as a signal when the model disagrees with it.'
+- id: q5
+  kind: review
+  section: Homework
+  title: Why a database at all?
+  question: Your hand-written search was faster than the vector database on this data. Why adopt the database?
+  model_answer: 'For 400 vectors I would not need it, and I would say so plainly. A matrix product in memory took a third of a millisecond. What the database provides is everything around the search: storage that survives a restart, text and metadata kept with each vector, filtering by metadata during the search, incremental adds and deletes, and an approximate index that keeps query time low as the collection grows into the millions. Those matter as soon as the system is real, with data arriving continuously and more than one process using it. So the decision is about operations and growth, not about speed today. Having written the exact version, I also know what the approximation costs: on our data the two agreed on 489 results of 500.'

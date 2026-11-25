@@ -1,0 +1,51 @@
+<p>Two practical matters remain, and then the measurements.</p>
+
+<p><strong>Chunking.</strong> An embedding is one vector for a whole text. For a short text that is ideal. For a long one, such as a full ticket thread with twenty work notes, the vector is an average of everything in it, and a query about one detail matches weakly. The remedy is to split long documents into <strong>chunks</strong>, embed each chunk, and return the document whose chunk matched best. Chunks overlap a little so that a sentence cut at a boundary survives whole in one of them. Twelve words in chunks of 5 with an overlap of 2:</p>
+<table class="plain">
+  <thead><tr><th>Chunk</th><th>Words</th><th>Starts at</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>w1 w2 w3 w4 w5</td><td>word 1</td></tr>
+    <tr><td>2</td><td>w4 w5 w6 w7 w8</td><td>word 4 (5 − 2 = 3 further on)</td></tr>
+    <tr><td>3</td><td>w7 w8 w9 w10 w11</td><td>word 7</td></tr>
+    <tr><td>4</td><td>w10 w11 w12</td><td>word 10; the text ends here</td></tr>
+  </tbody>
+</table>
+<p>Chunk size is a trade. Small chunks match precisely and lose context; large chunks keep context and blur. There is no correct size, only one that measures best on your data.</p>
+
+<p><strong>The vector database.</strong> Your session 7 search held every vector in one matrix in memory. A vector database such as Chroma, adopted today in <code>store.py</code>, adds what a real system needs around that: the vectors persist on disk, each is stored with its text and metadata, results can be filtered by metadata during the search, and an <strong>approximate index</strong> (a graph in which each vector links to its near neighbours) lets it search millions of vectors by visiting a few hundred. Measured here, on 400 incidents:</p>
+<table class="plain">
+  <thead><tr><th></th><th>Time per search</th><th>Agreement with exact search</th></tr></thead>
+  <tbody>
+    <tr><td>Your exact search (session 7)</td><td>0.32 ms</td><td>it is the reference</td></tr>
+    <tr><td>Chroma</td><td>1.13 ms</td><td>489 of 500 results the same</td></tr>
+  </tbody>
+</table>
+<p>Your thirty lines were faster. At this size a database buys convenience, not speed, and you should be able to say so. Its index starts to pay somewhere past a few hundred thousand vectors. The small disagreement is mostly ties: many incidents have identical text, and the two methods break ties differently.</p>
+
+<p><strong>What retrieval variants did.</strong> A related incident retrieved, over the 100 held-back incidents:</p>
+<table class="plain">
+  <thead><tr><th>Method</th><th>At rank 1</th><th>In top 5</th></tr></thead>
+  <tbody>
+    <tr><td>Vector search</td><td>87%</td><td>93%</td></tr>
+    <tr><td>Keyword search (BM25)</td><td>89%</td><td>93%</td></tr>
+    <tr><td>Hybrid (RRF of the two)</td><td>90%</td><td>93%</td></tr>
+    <tr><td>Hybrid, top 10 re-ranked by the language model</td><td>87%</td><td>92%</td></tr>
+    <tr><td>Whole ticket thread, one vector each</td><td>88%</td><td>91%</td></tr>
+    <tr><td>Thread in chunks of 60 words</td><td>89%</td><td>92%</td></tr>
+  </tbody>
+</table>
+<p>Read this with session 6's rule in mind: on 100 incidents, three points is noise. The honest summary is that every variant lands in the same place, at the ceiling set by the vague reports. Hybrid is fractionally best and costs nothing extra, so it is the sensible default. Re-ranking with a small general model took two minutes and made the ordering slightly worse. Chunking made no difference because the signal sits in the first two lines of a ticket. None of this means the techniques are useless; it means this data did not need them, and you only know that because you measured.</p>
+
+<p><strong>What RAG did to triage.</strong></p>
+<table class="plain">
+  <thead><tr><th>Triager</th><th>Priority exact</th><th>Within one</th><th>Service</th><th>Prompt tokens</th></tr></thead>
+  <tbody>
+    <tr><td>Model alone (session 6)</td><td>3%</td><td>23%</td><td>66%</td><td>about 140</td></tr>
+    <tr><td>Five nearest vote, no model (session 7)</td><td>67%</td><td>97%</td><td>86%</td><td>none</td></tr>
+    <tr><td>Model with 1 retrieved incident</td><td>20%</td><td>34%</td><td>91%</td><td>254</td></tr>
+    <tr><td>Model with 5 retrieved incidents</td><td>54%</td><td>75%</td><td>88%</td><td>559</td></tr>
+    <tr><td>Model with 10 retrieved incidents</td><td>54%</td><td>75%</td><td>90%</td><td>941</td></tr>
+    <tr><td>Model with 5, told to start from the neighbours' priority</td><td>66%</td><td>91%</td><td>89%</td><td>600</td></tr>
+  </tbody>
+</table>
+<p>Three things stand out. Retrieval transformed the model: service from 66% to about 90%, priority from 3% to 54%. One retrieved incident was enough for service and nowhere near enough for priority, and ten were no better than five for nearly twice the tokens. And the model with evidence still lost to a plain vote on priority, until one added sentence told it how to use the evidence. That sentence also turned one of the two real P1s into a P3. Every row of this table is a design decision with a cost, and the last experiment asks you to make it.</p>
