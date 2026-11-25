@@ -10,6 +10,54 @@ that needs help with first-pass triage. Each idea is built once by hand, then
 replaced with the standard tool and measured. Everything runs on one machine,
 and the built-in assistant, Buddy, uses only a model running locally.
 
+## How it fits together
+
+![The Agent Quest stack: two local applications, a local model, and the agent you build](assets/stack.svg)
+
+Everything runs on one machine. The course app and the service desk are two
+separate applications that share no code. The triage agent you build in the
+later sessions reaches the service desk over HTTP, the way it would reach a
+real ticketing system.
+
+## Meet Buddy
+
+<img src="assets/buddy.svg" width="88" height="88" align="left" alt="Buddy, a black and white dog with a blue collar">
+
+**Buddy is the learning sidekick built into the course app.** Ask him what a
+session teaches, how much you have done today, what to do next, or anything
+about a lesson you have unlocked. He can explain a session, give a hint on the
+exercise you are stuck on, walk through a worked example, and quiz you.
+
+<br clear="left">
+
+Buddy is deliberately limited, and that is the point:
+
+- **Local only.** He uses a model running on your machine under
+  [Ollama](https://ollama.com). No hosted model, no paid tokens, no internet.
+- **He knows this course and nothing else.** Off-topic questions are declined
+  without the model being called.
+- **Facts are computed, not generated.** Progress, streaks and next steps come
+  straight from your progress file.
+- **No spoilers.** He never reads worked answers or reference solutions, and
+  will not open lessons you have not unlocked.
+
+If Ollama is not running, the factual answers still work and lesson questions
+fall back to the lesson's own text.
+
+## Roadmap
+
+![Roadmap: sessions 1 to 5 are available now, sessions 6 to 14 are planned, with four milestones](assets/roadmap.svg)
+
+| Phase | Sessions | Status |
+|---|---|---|
+| **1 · Fundamentals** | 1 Tokenization · 2 Predicting the next token · 3 Attention · 4 A tiny GPT · 5 From toy to real | Available now |
+| **2 · The agent** | 6 Baseline and measurement · 7 Embeddings for search · 8 RAG · 9 Tool calling · 10 The agent | Planned |
+| **2 · The agent** | 11 Guardrails and failure · 12 Framework port · 13 Fine-tuning versus RAG · 14 Capstone | Planned |
+
+Milestones along the way: **M1** fundamentals done (session 5), **M2** retrieval
+measured (session 8), **M3** agent usable (session 10), **M4** production-ready
+(session 14). Each session unlocks when the one before it is complete.
+
 ## Two separate applications
 
 | | Address | What it is |
