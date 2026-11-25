@@ -1,6 +1,10 @@
 PY := .venv/bin/python
 
-.PHONY: setup setup-lessons data desk course serve up down test
+.PHONY: check setup setup-lessons data desk course serve up down test
+
+# Report what is installed and what is missing, without changing anything
+check:
+	./setup.sh --check
 
 setup:
 	python3 -m venv .venv

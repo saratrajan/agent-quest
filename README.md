@@ -93,14 +93,44 @@ answers are kept aside for scoring the agent.
 
 ## Getting started
 
-Needs Python 3.12 or newer.
+You need Python 3.12 or newer. Everything else is checked for you:
 
 ```bash
-make setup    # create .venv and install dependencies
-make data     # generate the incidents (same data every time)
-make serve    # start both apps, each as its own process
-make test     # run the tests
-make setup-lessons   # PyTorch, for the exercises in sessions 2 to 5 (about 80 MB)
+./setup.sh
+```
+
+The script assumes nothing is installed. It works through the list below, sets
+up what it can, and asks before each sizeable download:
+
+| Step | What it does | Needed for |
+|---|---|---|
+| Python environment | Creates `.venv` and installs the core dependencies | Everything |
+| PyTorch | Asks, then installs it (about 80 MB) | Exercises in sessions 2 to 5 |
+| Incident data | Generates the 500 incidents locally | The service desk |
+| Ollama | Checks it is installed and running; offers Homebrew on a Mac, else points to [ollama.com/download](https://ollama.com/download) | Buddy's explanations, hints and quizzes; session 5 |
+| Local model | Asks, then downloads `qwen3:4b` (about 2.5 GB) | The same |
+| Docker | Reports whether it is present | Optional |
+
+To see what is present and what is missing without changing anything, run
+`./setup.sh --check` (or `make check`). For an unattended install, `./setup.sh --yes`
+answers yes to every question.
+
+Without Ollama the lab still runs: the service desk, the lessons and Buddy's
+answers about your progress all work. Only Buddy's lesson explanations and
+session 5's experiments need the local model.
+
+Then start both apps:
+
+```bash
+make serve    # course app on http://localhost:8000, service desk on http://localhost:8080
+```
+
+Other commands:
+
+```bash
+make test            # run the tests
+make data            # regenerate the incidents (same data every time)
+make setup-lessons   # install PyTorch later, if you skipped it
 ```
 
 To run one app on its own, use `make desk` or `make course`.
