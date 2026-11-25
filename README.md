@@ -88,3 +88,7 @@ image for the course app does not include PyTorch.
 
 `data/` is not committed; every file in it can be regenerated except
 `progress.json`.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
