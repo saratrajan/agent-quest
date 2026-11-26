@@ -396,6 +396,9 @@ class Assistant:
             return self._out("Ask me what a session teaches, how much you've done today, what to do next, or anything about a lesson you've unlocked.")
         if re.fullmatch(r"(hi|hello|hey|yo|good (morning|afternoon|evening))\b[ !.]*", low):
             return self._out("Hi, I'm Buddy, your learning sidekick. " + self._next()[0])
+        if re.search(r"\bquiz\b|\b(test|question) me\b|\bask me (a|some|another) questions?\b", low):
+            # Typed instead of pressed: the same quiz as the "Quiz me" button, on the open session or the current one.
+            return self.quiz(session or (self._overview()["continue"] or {}).get("session", 1))
         named = re.search(r"\b(?:session|module|lesson)\s*(\d{1,2})\b", low)
         if re.search(r"\b(teach|teaches|learn|cover|covers|about|outcomes?)\b", low) and (named or re.search(r"\b(this|the) (module|session|lesson)\b", low)):
             current = self._overview()["continue"]
