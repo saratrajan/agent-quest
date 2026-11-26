@@ -200,6 +200,22 @@ def test_quiz_needs_something_already_studied(root):
     assert "Finish a concept step" in ask(c, "", action="quiz", session=1)["reply"] and model.calls == []
 
 
+@pytest.mark.parametrize("message", ["Quiz me on the 3 steps I have completed so far", "quiz me", "Can you test me?"])
+def test_typed_quiz_request_with_nothing_studied_gets_the_quiz_reply(root, message):
+    c, model = make(root)
+    for session in (1, None):  # on a session page, and from a page with no session open
+        extra = {"session": session} if session else {}
+        assert ask(c, message, **extra)["reply"] == "Finish a concept step in this session first, then I can quiz you on it."
+    assert model.calls == []
+
+
+def test_typed_quiz_request_starts_a_quiz_on_what_was_studied(root):
+    c, model = make(root, FakeModel("What does the causal mask stop?"))
+    done(c, "c1")
+    r = ask(c, "Quiz me on what I have done so far")
+    assert r["reply"] == "What does the causal mask stop?" and r["quiz"]["session"] == 1
+
+
 def test_actions_on_a_locked_session_are_refused(root):
     c, model = make(root)
     assert "locked" in ask(c, "", action="explain", session=2)["reply"] and model.calls == []
