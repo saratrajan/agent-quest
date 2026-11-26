@@ -121,8 +121,9 @@
       $("merges").appendChild(tr);
     });
     if (!merges.length) $("merges").innerHTML = "<tr><td>None yet</td></tr>";
-    $("stat").textContent = `${nBytes} bytes → ${ids.length} tokens · vocabulary ${256 + merges.length}` + (canStep ? "" : " · no pair occurs twice, finished");
+    $("stat").textContent = `${nBytes} bytes → ${ids.length} tokens · vocabulary ${256 + merges.length}` + (canStep ? "" : " · no pair occurs twice, so there is nothing left to merge. Change the text or start again.");
     $("step").disabled = !canStep;
+    $("step").textContent = canStep ? "Merge the top pair" : "Finished: no pair repeats";
   }
 
   $("step").addEventListener("click", step);

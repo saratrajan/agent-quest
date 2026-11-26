@@ -35,7 +35,7 @@
       complete(stepId, step.dataset.done !== "true").catch((err) => (btn.textContent = err.message));
     } else if (btn.dataset.action === "check") {
       const out = step.querySelector("[data-result]");
-      btn.disabled = true; btn.textContent = "Running the tests…";
+      btn.disabled = true; btn.setAttribute("aria-busy", "true"); btn.textContent = "Running the tests…";
       post(api(stepId, "check")).then((r) => {
         out.hidden = false;
         out.className = `result ${r.passed ? "pass" : "fail"}`;
@@ -43,7 +43,7 @@
         out.querySelector("pre").textContent = r.output;
         setDone(stepId, r.passed);
       }).catch((err) => { out.hidden = false; out.className = "result fail"; out.querySelector("strong").textContent = err.message; })
-        .finally(() => { btn.disabled = false; btn.textContent = "Run the tests"; });
+        .finally(() => { btn.disabled = false; btn.removeAttribute("aria-busy"); btn.textContent = "Run the tests"; });
     } else if (btn.dataset.action === "play") {
       play(step, btn);
     }
