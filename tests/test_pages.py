@@ -319,4 +319,4 @@ def test_a_switched_off_button_shows_a_busy_cursor_only_while_it_is_working(clie
     assert ".btn[disabled]{opacity:.6;cursor:not-allowed}" in css and '.btn[aria-busy="true"]{cursor:progress}' in css
     assert 'setAttribute("aria-busy", "true")' in client.get("/static/app.js").text
     widget = (Path(__file__).parent.parent / "lessons/01-tokenization/widgets/bpe-stepper.js").read_text()
-    assert "Finished: no pair repeats" in widget
+    assert "Finished: no pair repeats" in widget and "saves nothing, so training stops." in widget

@@ -20,6 +20,7 @@
       .bpe table{border-collapse:collapse;font:400 .85rem/1.5 var(--font-mono);width:100%}
       .bpe td{padding:.1rem .5rem .1rem 0;white-space:pre}
       .bpe tr.best td{color:var(--warning);font-weight:600}
+      .bpe .why{margin:.6rem 0 0;font-size:var(--step-2);line-height:1.5;color:var(--text)}
       .bpe .stat{font:500 var(--step-2)/1.4 var(--font-mono);color:var(--text-muted)}
     </style>
     <div class="bpe">
@@ -27,7 +28,7 @@
       <div class="row"><button class="btn primary" type="button" data-bpe="step">Merge the top pair</button><button class="btn" type="button" data-bpe="reset">Start again</button><span class="stat" data-bpe="stat" role="status"></span></div>
       <div class="toks" data-bpe="toks" aria-label="Current token sequence"></div>
       <div class="cols">
-        <div><h4>Pair counts now</h4><table data-bpe="counts"></table></div>
+        <div><h4>Pair counts now</h4><table data-bpe="counts"></table><p class="why" data-bpe="why" hidden></p></div>
         <div><h4>Merges learned</h4><table data-bpe="merges"></table></div>
       </div>
     </div>`;
@@ -122,6 +123,9 @@
     });
     if (!merges.length) $("merges").innerHTML = "<tr><td>None yet</td></tr>";
     $("stat").textContent = `${nBytes} bytes → ${ids.length} tokens · vocabulary ${256 + merges.length}` + (canStep ? "" : " · no pair occurs twice, so there is nothing left to merge. Change the text or start again.");
+    $("why").hidden = canStep;
+    $("why").textContent = ids.length < 2 ? "There is no pair left to count, so training stops."
+      : "Every pair occurs once. Merging a pair that occurs once saves nothing, so training stops.";
     $("step").disabled = !canStep;
     $("step").textContent = canStep ? "Merge the top pair" : "Finished: no pair repeats";
   }
