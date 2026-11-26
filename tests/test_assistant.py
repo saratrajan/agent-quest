@@ -189,10 +189,37 @@ def test_quiz_asks_a_question_then_marks_the_answer(root):
     done(c, "c1")
     r = ask(c, "", action="quiz", session=1)
     assert r["reply"] == "What does the causal mask stop?" and r["quiz"]["question"] == r["reply"]
-    model.answer = "Right: it stops looking ahead."
+    model.answer = "CORRECT"
     r2 = ask(c, "it stops looking at later tokens", quiz=r["quiz"], session=1)
-    assert r2["reply"].startswith("Right") and "quiz" not in r2
+    assert r2["reply"] == "Your answer is correct." and "quiz" not in r2
     assert "it stops looking at later tokens" in model.calls[-1][1]
+
+
+@pytest.mark.parametrize("verdict, reply", [
+    ("CORRECT", "Your answer is correct."),
+    ("correct. The context states that the mask stops a position looking ahead.", "Your answer is correct."),
+    ("INCORRECT: It stops a position from looking ahead at later tokens.",
+     "Your answer is incorrect. The correct answer is: It stops a position from looking ahead at later tokens."),
+    ("Incorrect - it stops a position from looking ahead", "Your answer is incorrect. The correct answer is: it stops a position from looking ahead."),
+    ("INCORRECT: The context states that it stops a position from looking ahead.",
+     "Your answer is incorrect. The correct answer is: it stops a position from looking ahead."),
+    ("INCORRECT", "Your answer is incorrect. Read the step again for the correct answer."),
+])
+def test_quiz_marking_is_a_plain_verdict_in_buddys_own_words(root, verdict, reply):
+    c, model = make(root, FakeModel("What does the causal mask stop?"))
+    done(c, "c1")
+    quiz = ask(c, "", action="quiz", session=1)["quiz"]
+    model.answer = verdict
+    assert ask(c, "my answer", quiz=quiz, session=1)["reply"] == reply
+
+
+def test_quiz_marking_that_gives_no_verdict_says_so(root):
+    c, model = make(root, FakeModel("What does the causal mask stop?"))
+    done(c, "c1")
+    quiz = ask(c, "", action="quiz", session=1)["quiz"]
+    model.answer = "The learner's answer mentions tokens, and the context states several things."
+    r = ask(c, "my answer", quiz=quiz, session=1)
+    assert r["reply"] == "I couldn't mark that answer. Try answering again, or ask me for another quiz." and "learner" not in r["reply"]
 
 
 def test_quiz_needs_something_already_studied(root):

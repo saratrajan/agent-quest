@@ -26,6 +26,10 @@ SYSTEM = ("You are Buddy, a friendly learning sidekick inside a hands-on course 
           "Answer using ONLY the CONTEXT you are given. If the context does not contain the answer, say you cannot find it "
           "in the course. Be concrete, use the context's own numbers and terms, and keep to 120 words or fewer. "
           "Never write solution code for an exercise.")
+MARKER = ("You mark one quiz answer for a course, using ONLY the CONTEXT you are given. Reply with a verdict and nothing else. "
+          "If the learner's answer agrees with the context, reply with the single word CORRECT. Otherwise reply with "
+          "INCORRECT: followed by the correct answer from the context in one short sentence. "
+          "Accept an answer that is right but worded differently; a number or name that differs from the context is wrong. Do not explain your marking and do not mention the learner or the context.")
 OFF_TOPIC = ("I can only help with this course: what a session teaches, your progress, and questions about the lessons "
              "you have unlocked. I couldn't match that to anything in them.")
 
@@ -377,11 +381,20 @@ class Assistant:
                       (quiz["session"], quiz["step_id"], quiz["chunk"]) and not c["locked"]), None)
         if chunk is None:
             return self._out("I've lost track of that question. Ask me for another quiz.")
-        system = SYSTEM + " Say whether the learner's answer is right, in 80 words or fewer, and give the correct answer from the context."
-        reply = self._ask_model(system, f"CONTEXT:\n{chunk['text']}\n\nQUIZ QUESTION: {quiz['question']}\nLEARNER'S ANSWER: {answer}\n\nQUESTION: Mark this answer.")
-        if reply is None:
+        verdict = self._ask_model(MARKER, f"CONTEXT:\n{chunk['text']}\n\nQUIZ QUESTION: {quiz['question']}\nLEARNER'S ANSWER: {answer}\n\n"
+                                          "QUESTION: Is the learner's answer correct? Reply CORRECT, or INCORRECT: and the correct answer.")
+        if verdict is None:
             return self._out("I can't mark that without the local model. Start Ollama and try again.", [self._source(chunk)])
-        return self._out(reply, [self._source(chunk)], used_model=True)
+        # The model gives only the verdict; the sentence the learner reads is written here.
+        found = re.match(r"\W*(incorrect|correct)\b[\s:.,\-]*(.*)", verdict, flags=re.I | re.S)
+        if not found:
+            return self._out("I couldn't mark that answer. Try answering again, or ask me for another quiz.", [self._source(chunk)])
+        if found.group(1).lower() == "correct":
+            return self._out("Your answer is correct.", [self._source(chunk)], used_model=True)
+        right = " ".join(found.group(2).split()).rstrip(".")
+        right = re.sub(r"^(the correct answer is|(the|according to the) context (states|says)?)[\s,:]*(that )?", "", right, flags=re.I)
+        ending = f"The correct answer is: {right}." if right else "Read the step again for the correct answer."
+        return self._out(f"Your answer is incorrect. {ending}", [self._source(chunk)], used_model=True)
 
     # ---- routing
 
