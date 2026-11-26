@@ -1,0 +1,21 @@
+# YAML lint rules for this repository: yamllint's defaults, minus the few
+# that do not suit these files.
+extends: default
+
+# Local-only material and installed packages.
+ignore: |
+  .venv/
+  docs/
+  data/
+  node_modules/
+  .superpowers/
+
+rules:
+  line-length: disable          # lesson text is written as long lines
+  document-start: disable       # no "---" first line
+  truthy:
+    check-keys: false           # "on:" in workflow files is a key, not a boolean
+  comments:
+    min-spaces-from-content: 1
+  indentation:
+    indent-sequences: whatever  # list items may sit under their key or be indented

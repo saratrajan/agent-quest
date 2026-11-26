@@ -24,19 +24,23 @@ concurrency:
 jobs:
   python-lint:
     name: Python lint
-    uses: saratrajan/ci-cd-templates/.github/workflows/lint-python.yml@v1.0.0
+    uses: saratrajan/ci-cd-templates/.github/workflows/lint-python.yml@v1.1.0
 
   markdown-lint:
     name: Markdown lint
-    uses: saratrajan/ci-cd-templates/.github/workflows/lint-markdown.yml@v1.0.0
+    uses: saratrajan/ci-cd-templates/.github/workflows/lint-markdown.yml@v1.1.0
+
+  yaml-lint:
+    name: YAML lint
+    uses: saratrajan/ci-cd-templates/.github/workflows/lint-yaml.yml@v1.1.0
 
   shell-lint:
     name: Shell lint
-    uses: saratrajan/ci-cd-templates/.github/workflows/lint-shell.yml@v1.0.0
+    uses: saratrajan/ci-cd-templates/.github/workflows/lint-shell.yml@v1.1.0
 
   tests:
     name: Unit tests
-    uses: saratrajan/ci-cd-templates/.github/workflows/test-python.yml@v1.0.0
+    uses: saratrajan/ci-cd-templates/.github/workflows/test-python.yml@v1.1.0
     with:
       # The CPU build of PyTorch: the lesson checks need it, and the default
       # Linux build would download several gigabytes of GPU libraries.
@@ -45,4 +49,4 @@ jobs:
 
   secrets:
     name: Secret scan
-    uses: saratrajan/ci-cd-templates/.github/workflows/scan-secrets.yml@v1.0.0
+    uses: saratrajan/ci-cd-templates/.github/workflows/scan-secrets.yml@v1.1.0
