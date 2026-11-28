@@ -68,8 +68,9 @@ class Tickets:
                 args.append(value)
         if q:
             pattern = "%" + q.lower().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
-            where.append("(lower(short_description) LIKE ? ESCAPE '\\' OR lower(description) LIKE ? ESCAPE '\\')")
-            args += [pattern, pattern]
+            where.append("(lower(number) LIKE ? ESCAPE '\\' OR lower(short_description) LIKE ? ESCAPE '\\'"
+                         " OR lower(description) LIKE ? ESCAPE '\\')")
+            args += [pattern, pattern, pattern]
         if opened_before:
             where.append("opened_at < ?")
             args.append(opened_before)

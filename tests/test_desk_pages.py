@@ -59,6 +59,8 @@ def test_filters_and_paging(desk):
     h2 = desk.get("/incidents?view=resolved&page=2").text
     assert "INC0010375" in h2 and "INC0010400" not in h2
     assert "No incidents match" in desk.get("/incidents?view=resolved&q=zzzzqqqq").text
+    found = desk.get("/incidents?view=all&q=INC0010375").text
+    assert "1 incident" in found and "INC0010375" in found and "No incidents match" not in found
 
 
 def test_detail_shows_fields_notes_and_related_deploys(desk, generated):
