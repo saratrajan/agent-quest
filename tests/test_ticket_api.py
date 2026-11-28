@@ -32,6 +32,13 @@ def test_filters(client):
     assert r["result"] and all(i["opened_at"] < "2025-09-01T00:00:00Z" for i in r["result"])
 
 
+def test_search_finds_an_incident_by_its_number(client):
+    assert [i["number"] for i in client.get(f"{T}?q=INC0010395").json()["result"]] == ["INC0010395"]
+    assert [i["number"] for i in client.get(f"{T}?q=inc0010395").json()["result"]] == ["INC0010395"]  # any letter case
+    part = client.get(f"{T}?q=001039&limit=100").json()["result"]  # part of a number
+    assert len(part) >= 2 and all("001039" in i["number"] for i in part)
+
+
 def test_search_text_is_not_treated_as_sql_or_wildcards(client):
     assert client.get(f"{T}?q=%25").json()["total"] < 400
     assert client.get(f"{T}?q=' OR 1=1 --").json()["total"] == 0
